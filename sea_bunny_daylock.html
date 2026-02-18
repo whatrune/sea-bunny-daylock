@@ -1,0 +1,4733 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sea&Bunny（シーバニ）— DAYLOCK Demo</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --panel:#101823; --panel2:#0f1720; --text:#e6edf3;
+      --muted:#9fb0c0; --accent:#67e8f9; --warn:#fbbf24; --bad:#fb7185; --good:#86efac;
+      --line:#1f2a37; --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:var(--sans); background:linear-gradient(180deg,#070a0e, #0b0f14 35%, #070a0e); color:var(--text);}
+    header{position:sticky; top:0; z-index:1000; background:rgba(11,15,20,.9); backdrop-filter: blur(10px); border-bottom:1px solid var(--line);}
+    .wrap{max-width:1180px; margin:0 auto; padding:14px 16px;}
+    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between;}
+    .brand{display:flex; gap:10px; align-items:center;}
+    .dot{width:10px; height:10px; border-radius:99px; background:var(--accent); box-shadow:0 0 18px rgba(103,232,249,.6);}
+    h1{font-size:14px; margin:0; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+    .hud{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end;}
+    .pill{border:1px solid var(--line); background:rgba(16,24,35,.8); padding:8px 10px; border-radius:999px; font-family:var(--mono); font-size:12px; color:var(--muted)}
+    .pill b{color:var(--text); font-weight:700}
+    .main{display:grid; grid-template-columns: 320px 1fr 340px; gap:12px; padding:14px 16px 6px; max-width:1180px; margin:0 auto;}
+    @media (max-width: 1080px){ .main{grid-template-columns:1fr; } }
+    .card{background:linear-gradient(180deg, rgba(16,24,35,.9), rgba(12,18,28,.9)); border:1px solid var(--line); border-radius:16px; overflow:hidden;}
+    .card h2{margin:0; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); padding:12px 12px; border-bottom:1px solid var(--line);}
+    .card .content{padding:12px;}
+    #sceneText{min-height:320px;}
+
+    .locs{display:flex; flex-direction:column; gap:8px; padding:12px;}
+    .locbtn{width:100%; text-align:left; border:1px solid var(--line);
+      background:rgba(255,255,255,.030);
+      color:var(--text); padding:14px 14px 14px 18px; border-radius:14px; cursor:pointer;
+      font-size:16px; line-height:1.25; position:relative; overflow:hidden;
+      transition:transform .08s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;}
+    .locbtn::before{content:""; position:absolute; left:0; top:0; bottom:0; width:5px;
+      background:rgba(103,232,249,.7); opacity:.35;}
+    .locbtn:hover{border-color:rgba(103,232,249,.35); box-shadow:0 8px 18px rgba(0,0,0,.22);
+      background:rgba(255,255,255,.055);}
+    .locbtn:active{transform:translateY(1px);}
+    .locbtn small{display:block; color:var(--muted); margin-top:2px}
+    .locName{display:flex; align-items:baseline; gap:8px;}
+    .locNo{flex:0 0 2.2em; width:2.2em; text-align:center; opacity:.9;}
+    .locTitle{flex:1 1 auto; font-weight:600;}
+    .locMeta{flex:0 0 auto; font-size:12px; color:var(--muted); border:1px solid var(--line);
+      background:rgba(16,24,35,.75); padding:4px 8px; border-radius:999px; line-height:1;}
+    @media (max-width: 420px){ .locMeta{display:none;} }
+    .locbtn.active{border-color:rgba(103,232,249,.55); box-shadow:0 0 0 3px rgba(103,232,249,.12) inset;}
+    .section{border-top:1px solid var(--line); padding-top:12px; margin-top:12px;}
+    .controls{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+    button, input{font:inherit}
+    .btn{border:1px solid var(--line); background:rgba(16,24,35,.85); color:var(--text); padding:10px 12px; border-radius:12px; cursor:pointer;}
+    .btn:hover{border-color:rgba(103,232,249,.4)}
+    .btn.primary{border-color:rgba(103,232,249,.5); background:rgba(8,29,36,.6)}
+    .btn.danger{border-color:rgba(251,113,133,.55); background:rgba(36,8,18,.45)}
+    .btn.ghost{background:transparent}
+    .input{flex:1; min-width:220px; border:1px solid var(--line); background:rgba(15,23,32,.7); color:var(--text); padding:10px 12px; border-radius:12px; font-family:var(--mono);}
+    .mono{font-family:var(--mono)}
+    .muted{color:var(--muted);padding:0 12px;}
+    .log{max-height:calc(100vh - 260px); overflow:auto; padding:12px; font-family:var(--mono); font-size:12px; line-height:1.45}
+    .log .line{padding:6px 8px; border:1px solid rgba(31,42,55,.5); border-radius:10px; background:rgba(15,23,32,.45); margin-bottom:8px;}
+    .tag{display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid var(--line); font-size:11px; color:var(--muted); margin-right:6px}
+    .ok{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)}
+    .kv{display:grid; grid-template-columns: 1fr auto; gap:6px; font-family:var(--mono); font-size:12px}
+    .kv div{padding:6px 8px; border:1px solid rgba(31,42,55,.5); background:rgba(15,23,32,.45); border-radius:10px;}
+    .overlay{position:fixed; inset:0; background:rgba(2,6,10,.78); display:none; align-items:center; justify-content:center; padding:18px;}
+    .overlay.show{display:flex;}
+    .terminal{width:min(880px, 96vw); border-radius:18px; border:1px solid rgba(103,232,249,.25); overflow:hidden; background:#05080d; box-shadow:0 0 0 4px rgba(103,232,249,.08), 0 30px 80px rgba(0,0,0,.6); display:flex; flex-direction:column; max-height:50vh;}
+    .termbar{display:flex; gap:10px; align-items:center; justify-content:space-between; padding:10px 12px; border-bottom:1px solid rgba(103,232,249,.18); background:linear-gradient(180deg, rgba(6,13,20,.95), rgba(5,8,13,.95));}
+    .termbar .title{font-family:var(--mono); font-size:12px; color:var(--muted)}
+    .termbody{padding:14px; font-family:var(--mono); font-size:12.5px; line-height:1.5; color:#d7faff; height:auto; max-height:50vh; overflow-y:auto; white-space:pre-wrap; flex:1; min-height:0;}
+    .termline{white-space:pre-wrap}
+    .terminput{display:flex; gap:10px; align-items:center; padding:12px; border-top:1px solid rgba(103,232,249,.18); background:rgba(6,13,20,.9);}
+    .terminput input{flex:1; border:1px solid rgba(103,232,249,.25); background:rgba(2,6,10,.6); color:#d7faff; padding:10px 12px; border-radius:12px; font-family:var(--mono);}
+    .end{padding:14px; border-top:1px solid var(--line); background:rgba(15,23,32,.45)}
+
+    .timeCenter{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-width:220px}
+    .timeBig{font-size:28px; letter-spacing:.12em; color:var(--text); text-shadow:0 0 18px rgba(103,232,249,.18);}
+    @media (max-width:1080px){ .timeBig{font-size:24px} }
+    .timeSub{font-size:11px; letter-spacing:.16em; text-transform:uppercase}
+    .timeBig.pulse{animation: pulseGlow .55s ease-out 1}
+    @keyframes pulseGlow{
+      0%{transform:translateY(-1px) scale(1.01); text-shadow:0 0 0 rgba(103,232,249,0); opacity:.85}
+      40%{transform:translateY(0) scale(1.02); text-shadow:0 0 28px rgba(103,232,249,.35); opacity:1}
+      100%{transform:translateY(0) scale(1); text-shadow:0 0 18px rgba(103,232,249,.18); opacity:1}
+    }
+
+  
+    .card .log{max-height:inherit; overflow:auto}
+    @media (max-width: 1080px){
+      .log{max-height:260px;}
+    }
+
+  
+    /* Field Log readability */
+    .log .line{word-break:break-word; overflow-wrap:anywhere}
+
+/* Scrollbar theming (match main UI) */
+.card .log, .talklog{
+  scrollbar-width: thin;
+  scrollbar-color: rgba(103,232,249,.35) rgba(15,23,32,.55);
+}
+.card .log::-webkit-scrollbar, .talklog::-webkit-scrollbar{ width: 10px; height: 10px; }
+.card .log::-webkit-scrollbar-track, .talklog::-webkit-scrollbar-track{
+  background: rgba(15,23,32,.55);
+  border-radius: 999px;
+  border: 1px solid rgba(31,42,55,.75);
+}
+.card .log::-webkit-scrollbar-thumb, .talklog::-webkit-scrollbar-thumb{
+  background: rgba(103,232,249,.22);
+  border: 1px solid rgba(103,232,249,.35);
+  border-radius: 999px;
+}
+.card .log::-webkit-scrollbar-thumb:hover, .talklog::-webkit-scrollbar-thumb:hover{
+  background: rgba(103,232,249,.32);
+}
+
+
+  
+    
+    /* Talk Log (visual novel style) */
+    .talklog{
+      max-height: 260px;
+      overflow:auto;
+      padding: 12px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(0,0,0,.14);
+    }
+    .talklog .talkHdr{
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: .08em;
+      margin: 0 0 10px 0;
+    }
+    .talklog .vnEntry{ margin: 0 0 10px 0; }
+    .talklog .vnBlock{ margin: 10px 0 0 0; }
+    .talklog .vnName{
+      color: var(--accent);
+      font-weight: 800;
+      letter-spacing: .06em;
+      font-size: 12px;
+      line-height: 1.2;
+      margin: 0 0 6px 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .talklog .vnBubble{
+      flex: 1 1 auto;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.09);
+      background: rgba(16,24,35,.65);
+      box-shadow: 0 12px 30px rgba(0,0,0,.18);
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .talklog .vnNarration{
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      padding: 8px 10px;
+      border-left: 2px solid rgba(103,232,249,.22);
+      margin: 6px 0 0 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap:anywhere;
+    }
+    .talklog .cursor{
+      display:inline-block;
+      width: 8px;
+      margin-left: 2px;
+      opacity: .9;
+      animation: blink 1s steps(2, start) infinite;
+    }
+    @keyframes blink{ to { opacity: 0; } }
+
+/* Layout: allow Field Log to stretch */
+    body{min-height:100vh}
+    .grid{
+      align-items: stretch;
+min-height:100vh}
+    .card .content{display:flex; flex-direction:column; height:100%}
+    /* keep locations list natural height, and let Field Log take remaining space */
+    #locs{flex:0 0 auto}
+    #log{flex:1 1 auto; max-height:none; overflow:auto}
+
+    /* Scrollbar styling (Field Log) */
+    #log{scrollbar-width:thin; scrollbar-color: rgba(255,255,255,.25) rgba(255,255,255,.06)}
+    #log::-webkit-scrollbar{width:10px}
+    #log::-webkit-scrollbar-track{background: rgba(255,255,255,.06); border-radius: 10px}
+    #log::-webkit-scrollbar-thumb{background: rgba(255,255,255,.25); border-radius: 10px; border:2px solid rgba(255,255,255,.06)}
+    #log::-webkit-scrollbar-thumb:hover{background: rgba(255,255,255,.35)}
+
+  
+    /* Field Log: improve readability */
+    #log .line{padding:10px 12px; border-radius:14px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.02); margin-bottom:10px}
+    #log .line .meta{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+    #log .badge{font-size:11px; letter-spacing:.06em; opacity:.85; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.030)}
+    #log .msg{margin-top:8px; white-space:pre-wrap; line-height:1.45; word-break:break-word; overflow-wrap:anywhere}
+
+    /* Conversation highlight */
+    #log .line.talk{background:rgba(255,255,255,.030); border-color:rgba(255,255,255,.12); border-left:4px solid rgba(255,255,255,.22)}
+    #log .line.talk .badge.kind{background:rgba(255,255,255,.06)}
+    #log .line.key{background:rgba(255,255,255,.03)}
+    #log .line.get{background:rgba(255,255,255,.03)}
+    #log .line.deny{background:rgba(255,255,255,.02); opacity:.95}
+
+  
+    /* Blackout overlay */
+    /* Reboot code stream */
+    #blackout .bo-code{
+      margin-top:16px;
+      width:min(900px, 88vw);
+      max-height:320px;
+      overflow:hidden;
+      text-align:left;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:14px;
+      line-height:1.35;
+      letter-spacing:.02em;
+      padding:14px 16px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      opacity:0;
+      transform: translateY(6px);
+      transition: opacity 220ms ease, transform 220ms ease;
+      white-space:pre;
+    }
+    #blackout.on .bo-code{opacity:.95; transform: translateY(0);}
+
+
+    #blackout, #blackout *{color: rgba(255,255,255,.92)}
+    #blackout.on .bo-inner{opacity:1; transform: translateY(0) scale(1)}
+    #blackout .bo-title{ text-shadow: 0 0 22px rgba(255,255,255,.10) }
+    #blackout .bo-glitch{ text-shadow: 0 0 18px rgba(255,255,255,.08) }
+
+    #blackout{
+      position:fixed; inset:0;
+      display:none;
+      pointer-events:none;
+      z-index:9999;
+      background:rgba(0,0,0,0);
+    }
+    #blackout.on{display:flex; align-items:center; justify-content:center; animation: boFade 2300ms ease-in-out forwards;}
+    #blackout .bo-inner{
+      text-align:center;
+      padding:32px 36px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.45);
+      box-shadow: 0 20px 60px rgba(0,0,0,.55);
+      transform: translateY(10px) scale(.98);
+      opacity:1;
+    }
+    #blackout .bo-title{
+      font-size:56px; letter-spacing:.14em; font-weight:800;
+    }
+    #blackout .bo-sub{
+      margin-top:8px;
+      font-size:14px; letter-spacing:.22em; opacity:.85;
+      text-transform:uppercase;
+    }
+    #blackout .bo-glitch{
+      margin-top:18px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:24px; letter-spacing:.08em;
+      opacity:.9;
+      position:relative;
+      display:inline-block;
+      padding:8px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.030);
+    }
+    #blackout .bo-glitch::before,
+    #blackout .bo-glitch::after{
+      content: attr(data-text);
+      position:absolute; left:0; top:0;
+      width:100%;
+      overflow:hidden;
+      opacity:.65;
+    }
+    #blackout .bo-glitch::before{
+      transform: translate(1px, -1px);
+      clip-path: inset(0 0 55% 0);
+      animation: boGlitch 320ms steps(2,end) 6;
+    }
+    #blackout .bo-glitch::after{
+      transform: translate(-1px, 1px);
+      clip-path: inset(45% 0 0 0);
+      animation: boGlitch 300ms steps(2,end) 7;
+    }
+    @keyframes boFade{
+      0%{background:rgba(0,0,0,0)}
+      12%{background:rgba(0,0,0,.92)}
+      70%{background:rgba(0,0,0,.92)}
+      86%{background:rgba(0,0,0,.70)}
+      100%{background:rgba(0,0,0,0)}
+    }
+    @keyframes boPop{
+      0%{opacity:0; transform: translateY(10px) scale(.98)}
+      12%{opacity:1; transform: translateY(0) scale(1)}
+      70%{opacity:1}
+      100%{opacity:0; transform: translateY(-6px) scale(.98)}
+    }
+    @keyframes boGlitch{
+      0%{filter: blur(0px)}
+      30%{filter: blur(.6px)}
+      60%{filter: blur(0px)}
+      100%{filter: blur(.2px)}
+    }
+
+  
+    /* Header time size */
+    #time{font-size:72px; letter-spacing:.12em}
+    #timeSub{margin-top:6px}
+  
+    /* Countdown overlay */
+    #countdown{position:fixed; inset:0; display:none; pointer-events:none; z-index:9998; background:rgba(0,0,0,.0);}
+    #countdown.on{display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.55); animation: cdFade 2400ms ease-in-out forwards; pointer-events:auto; cursor:wait; }
+    #countdown, #countdown *{color: rgba(255,255,255,.94)}
+
+    body.ui-locked .locbtn,
+    body.ui-locked button,
+    body.ui-locked select{
+      opacity:.55;
+      filter: grayscale(0.35);
+    }
+
+    #countdown .cd-inner{text-align:center; padding:26px 30px; border-radius:18px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.55); box-shadow:0 20px 60px rgba(0,0,0,.55);}
+    #countdown .cd-time{font-size:64px; letter-spacing:.14em; font-weight:900; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    #countdown .cd-sub{margin-top:10px; font-size:12px; letter-spacing:.22em; opacity:.85; text-transform:uppercase;}
+    #countdown .cd-num{margin-top:18px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:22px; font-weight:800; letter-spacing:.12em; padding:10px 16px; border-radius:14px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.030); display:inline-block; min-width:160px; opacity:.9;}
+    #countdown.tick .cd-time{animation: cdPulse 120ms ease-in-out infinite}
+    #countdown .cd-time.j1{transform: translateX(1px)}
+    #countdown .cd-time.j2{transform: translateX(-1px)}
+    @keyframes cdPulse{0%{filter: blur(0px)}50%{filter: blur(.5px)}100%{filter: blur(0px)}}
+    @keyframes cdFade{0%{opacity:0; transform: scale(.98)}10%{opacity:1; transform: scale(1)}85%{opacity:1}100%{opacity:0; transform: scale(.99)}}
+  
+    /* Code syntax colors */
+    #blackout .bo-code .ln{display:block; white-space:pre;}
+    #blackout .bo-code .kw{color: rgba(86, 156, 214, .98);}      /* blue (keywords) */
+    #blackout .bo-code .tag{color: rgba(78, 201, 176, .98);}     /* teal (tags) */
+    #blackout .bo-code .ok{color: rgba(181, 206, 168, .98);}     /* green (OK) */
+    #blackout .bo-code .warn{color: rgba(220, 220, 170, .98);}   /* yellow (warn) */
+    #blackout .bo-code .err{color: rgba(244, 71, 71, .98);}      /* red (error) */
+    #blackout .bo-code .dim{color: rgba(255,255,255,.62);}       /* dim */
+    #blackout .bo-code .mono{font-variant-ligatures:none;}
+  
+    /* Code syntax colors (simple) */
+    #blackout .bo-code .ln{display:block; white-space:pre;}
+    #blackout .bo-code .tag{color: rgba(120, 160, 255, .95);}   /* tag */
+    #blackout .bo-code .warn{color: rgba(255, 210, 120, .95);}  /* warn */
+    #blackout .bo-code .err{color: rgba(255, 120, 120, .98);}   /* error */
+    #blackout .bo-code .ok{color: rgba(170, 230, 170, .96);}    /* ok */
+    #blackout .bo-code .dim{color: rgba(255,255,255,.70);}      /* default */
+    #blackout .bo-code .mono{font-variant-ligatures:none;}
+  
+    /* Tabs (Locations / People) */
+    .tabsHdr{display:flex; gap:8px; align-items:center; margin-bottom:10px;padding:0 12px;}
+    .tabBtn{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      flex:1 1 auto;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.030);
+      color:rgba(255,255,255,.85);
+      cursor:pointer;
+      font-weight:600;
+      letter-spacing:.02em;
+      transition:transform .08s ease, background .15s ease, border-color .15s ease;
+    }
+    .btnNew{display:inline-flex; align-items:center; justify-content:center; font-size:10px; letter-spacing:.08em; padding:1px 7px; border-radius:999px; border:1px solid rgba(255,205,120,.55); background:rgba(255,205,120,.18); color:rgba(255,230,190,.95); box-shadow: 0 0 0 1px rgba(0,0,0,.25) inset; position:absolute; right:10px; top:50%; transform:translateY(-50%);}
+
+    .tabBtn:hover{transform:translateY(-1px); background:rgba(255,255,255,.06)}
+    .tabBtn.active{
+      background:rgba(103,232,249,.14);
+      border-color:rgba(103,232,249,.30);
+      color:#eaffff;
+      text-shadow:0 0 18px rgba(103,232,249,.14);
+    }
+    
+    .people{display:flex; flex-direction:column; gap:8px; padding:0 12px}
+
+    /* People rows (match Location card tone) */
+    .personRow{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      padding:14px 12px 14px 18px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.030);
+      cursor:pointer;
+      position:relative;
+      overflow:hidden;
+      transition:transform .08s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
+    }
+    .personRow::before{
+      content:"";
+      position:absolute; left:0; top:0; bottom:0;
+      width:5px;
+      background:rgba(103,232,249,.70);
+      opacity:.28;
+    }
+    .personRow.locked::before{ background:rgba(251,113,133,.70); opacity:.22; }
+    .personRow.unlocked::before{ background:rgba(134,239,172,.70); opacity:.22; }
+
+    .personRow:hover{
+      transform:translateY(-1px);
+      border-color:rgba(103,232,249,.28);
+      box-shadow:0 8px 18px rgba(0,0,0,.22);
+      background:rgba(255,255,255,.055);
+    }
+    .personRow:active{transform:translateY(1px);}
+
+    .personName{font-weight:700; letter-spacing:.01em;}
+    .personRow .muted{margin-top:2px;}
+
+    .badge{
+      font-size:11px; padding:4px 10px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      color:rgba(255,255,255,.75);
+      background:rgba(255,255,255,.030);
+      white-space:nowrap;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.22) inset;
+    }
+    .badge.locked{border-color:rgba(255,120,120,.28); background:rgba(255,120,120,.08); color:rgba(255,210,210,.92)}
+    .badge.unlocked{border-color:rgba(170,230,170,.22); background:rgba(170,230,170,.08); color:rgba(210,255,210,.92)}
+
+    /* Modal */
+    .modal{position:fixed; inset:0; display:none; z-index:9999}
+    .modal.on{display:block}
+    .modalBackdrop{position:absolute; inset:0; background:rgba(0,0,0,.72)}
+    .modalCard{
+      position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      width:min(760px, 92vw);
+      max-height:84vh;
+      overflow:auto;
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(16,18,22,.94);
+      box-shadow:0 20px 60px rgba(0,0,0,.55);
+      padding:14px 14px 16px;
+      backdrop-filter: blur(10px);
+    }
+    .modalTop{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px}
+    .modalTitle{font-weight:900; letter-spacing:.06em}
+    .modalSub{font-size:12px}
+    .modalBody{
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+    }
+/* Memo pad style for People profiles (safe: CSS only) — themed to main UI */
+#peopleModal .modalCard{
+  background:linear-gradient(180deg, rgba(16,24,35,.96), rgba(12,18,28,.96));
+  border:1px solid var(--line);
+  box-shadow:0 24px 80px rgba(0,0,0,.55);
+  backdrop-filter: blur(10px);
+}
+#peopleModal .modalTitle{ color:var(--text); letter-spacing:.04em }
+#peopleModal .modalSub{ color:var(--muted) }
+#peopleModal .btnGhost{
+  color:var(--text);
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.03);
+}
+#peopleModal .btnGhost:hover{ background:rgba(255,255,255,.06) }
+
+/* Ruled paper + margin (dark theme) */
+#peopleModal .modalBody{
+  color:var(--text);
+  border:1px solid var(--line);
+  background:
+    linear-gradient(to right, rgba(103,232,249,.18), rgba(103,232,249,.18)) 44px 0/2px 100% no-repeat,
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 24px,
+      rgba(255,255,255,.05) 25px
+    ),
+    rgba(255,255,255,.02);
+  border-radius:14px;
+  padding:18px 16px 18px 64px;
+  white-space:pre-wrap;
+  line-height:1.75;
+  font-family: var(--mono);
+  font-size:13px;
+}
+
+
+#peopleModal .modalBody::first-line{
+  color:var(--accent);
+  font-weight:800;
+  letter-spacing:.12em;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+  text-decoration-color: rgba(103,232,249,.35);
+}
+
+
+    .btnGhost{background:rgba(255,255,255,.030)}
+
+
+    .tabsHdr{position:relative; z-index:5; pointer-events:auto}
+    .tabBtn{pointer-events:auto}
+
+
+/* Scene pixel-art header */
+.sceneArt{
+  margin: 0 0 10px 0;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(120,200,255,.12);
+  background: rgba(12,16,22,.35);
+}
+.sceneArt img{
+  display:block;
+  width:100%;
+  height:150px;
+  object-fit:cover;
+  image-rendering: pixelated;
+  filter: saturate(0.95) contrast(1.05);
+
+  /* Fade-in / Fade-out for scene switching */
+  opacity: 0;
+  transition: opacity 160ms ease;
+  will-change: opacity;
+}
+
+
+    /* Docs tab */
+    .docsWrap{ display:grid; grid-template-columns: 1fr; gap:10px; }
+    .docsList{ border:1px solid var(--line); border-radius:14px; background: rgba(0,0,0,.14); overflow:hidden; }
+    .docItem{ padding:10px 12px; border-bottom:1px solid var(--line); cursor:pointer; }
+    .docItem{ position:relative; }
+    .docNew{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-size:11px;
+      letter-spacing:.08em;
+      padding:2px 8px;
+      border-radius:999px;
+      margin-left:8px;
+      border:1px solid rgba(180,220,255,.35);
+      background:rgba(90,140,200,.16);
+      color:#bfe2ff;
+      vertical-align:middle;
+    }
+
+    .docItem:last-child{ border-bottom:0; }
+    .docItem:hover{ background: rgba(103,232,249,.08); }
+    .docItem .t{ font-weight:700; }
+    .docItem .s{ font-size:11px; color: var(--muted); margin-top:2px; }
+    .docView{ border:1px solid var(--line); border-radius:14px; background: rgba(0,0,0,.14); padding:12px; white-space:pre-wrap; line-height:1.7; max-height: 420px; overflow:auto; }
+    .tabBtn{ user-select:none; }
+
+
+    /* Docs: banners / shift emphasis */
+    .docBanner{
+      border:1px solid rgba(251,191,36,.45);
+      background: rgba(251,191,36,.10);
+      border-radius: 14px;
+      padding: 12px 12px;
+      margin: 0 0 12px 0;
+    }
+    .docBanner .k{
+      display:inline-block;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.12em;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border:1px solid rgba(251,191,36,.45);
+      background: rgba(251,191,36,.12);
+      color: var(--warn);
+      margin-bottom: 6px;
+    }
+    .docBanner .t{
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      line-height: 1.25;
+      margin-top: 6px;
+    }
+    .docBanner .s{
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 6px;
+      line-height: 1.6;
+    }
+    .docHtml{
+      white-space: normal;
+      line-height: 1.75;
+    }
+    .docHtml pre{
+      margin: 10px 0 0 0;
+      white-space: pre-wrap;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.75;
+    }
+
+
+    /* Profile modal (People) */
+    .profileBody{ line-height:1.65; }
+    .profilePage{ padding:0; }
+    .profileHeader{
+      display:block;
+      width:100%;
+      font-weight:800;
+      letter-spacing:0.06em;
+      font-size:14px;
+      padding:6px 10px;
+      border-radius:12px;
+      background:rgba(103,232,249,.12);
+      color:var(--accent);
+      border:1px solid rgba(103,232,249,.22);
+      margin-bottom:10px;
+    }
+    .profileContent{
+      margin-top:8px;
+      font-size:13.5px;
+      color:var(--text);
+      padding:0 10px 10px;
+    }
+    .profileSep{
+      height:1px;
+      background:rgba(159,176,192,.18);
+      margin:14px 0;
+    }
+
+
+/* v320: make Field Log scroll reliably (grid layout -> constrain left sidebar height and allow overflow) */
+.main{min-height:100vh;}
+.main > aside.card:first-of-type{
+  height: calc(100vh - 120px);
+  display:flex;
+  flex-direction:column;
+}
+.main > aside.card:first-of-type .divider{flex:0 0 auto;}
+.main > aside.card:first-of-type .muted{flex:0 0 auto;}
+.main > aside.card:first-of-type .pane{flex:0 0 auto;}
+/* Field Log area */
+#log{
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+.main > aside.card:first-of-type .log{max-height:none;}
+@media (max-width: 980px){
+  .main > aside.card:first-of-type{height:auto; display:block;}
+  #log{max-height:260px;}
+}
+
+
+/* Constrain center and right panels to viewport height (match left) */
+.main > section.card{
+  height: calc(100vh - 120px);
+  display:flex;
+  flex-direction:column;
+}
+.main > section.card .content{
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+.main > aside.card:last-of-type{
+  height: calc(100vh - 120px);
+  display:flex;
+  flex-direction:column;
+}
+.main > aside.card:last-of-type .tabsHdr{flex:0 0 auto;}
+.main > aside.card:last-of-type .content{
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+@media (max-width: 980px){
+  .main > section.card{height:auto; display:block;}
+  .main > section.card .content{overflow:visible;}
+  .main > aside.card:last-of-type{height:auto; display:block;}
+  .main > aside.card:last-of-type .content{overflow:visible;}
+}
+
+/* v343 override: make main slightly shorter to avoid bottom scroll */
+main{min-height:90vh;}
+
+
+/* v344 override: shrink main height */
+.main{min-height:90vh !important; height:90vh;}
+
+/* v348: fix talklog height */
+.talklog{height:260px; max-height:260px; overflow:auto;}
+
+/* --- Scene scroll polish: keep Actions/Talk fixed, scroll only scene text area --- */
+.main > section.card .content.sceneLayout{
+  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.main > section.card .content.sceneLayout .sceneScroll{
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px; /* avoid text under scrollbar */
+}
+/* Optional: make the scrollbar feel consistent */
+.main > section.card .content.sceneLayout .sceneScroll{
+  scrollbar-width: thin;
+  scrollbar-color: rgba(103,232,249,.30) rgba(15,23,32,.45);
+}
+.main > section.card .content.sceneLayout .sceneScroll::-webkit-scrollbar{ width: 10px; }
+.main > section.card .content.sceneLayout .sceneScroll::-webkit-scrollbar-track{ background: rgba(15,23,32,.35); border-radius: 999px; }
+.main > section.card .content.sceneLayout .sceneScroll::-webkit-scrollbar-thumb{ background: rgba(103,232,249,.22); border-radius: 999px; border: 2px solid rgba(15,23,32,.35); }
+.main > section.card .content.sceneLayout .sceneScroll::-webkit-scrollbar-thumb:hover{ background: rgba(103,232,249,.30); }
+
+/* On narrow screens, allow natural height */
+@media (max-width: 980px){
+  .main > section.card .content.sceneLayout{ overflow: visible !important; }
+  .main > section.card .content.sceneLayout .sceneScroll{ overflow: visible; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="row">
+      <div class="brand">
+        <div class="dot"></div>
+        <div>
+          <h1>SEA&BUNNY // DAYLOCK</h1>
+          <div class="muted" style="font-size:12px">レース前日ループ（デモ）</div>
+        </div>
+      </div>
+
+      <div class="timeCenter">
+        <div class="timeBig mono" id="timeBig">07:00</div>
+        <div class="timeSub muted" id="timeSub">DAYLOCKED</div>
+      </div>
+
+      <div class="hud">
+        <div class="pill">LOOP: <b id="loop">01</b></div>
+        <div class="pill">STATUS: <b id="status">DAYLOCKED</b></div>
+      </div>
+    </div>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+  <aside class="card">
+    <h2>Navigation</h2>
+    <div class="tabsHdr" style="margin-top:10px">
+      <button class="tabBtn active"  id="tabLocs" onclick="setTab('locs')">Locations</button>
+      <button class="tabBtn"  id="tabPeople" onclick="setTab('people')">People</button>
+    </div>
+    <div class="pane" id="paneLocs"><div class="locs" id="locs"></div></div>
+    <div class="pane" id="panePeople" style="display:none"><div class="people" id="people"></div></div>
+    <div class="divider"></div>
+    <div class="muted" style="font-size:12px; margin:10px 0 8px">Field Log</div>
+    <div class="log" id="log"></div>
+  </aside>
+
+  <section class="card">
+    <h2>Scene</h2>
+    <div class="content sceneLayout">
+  <div class="sceneScroll">
+    <div class="sceneArt"><img id="sceneArtImg" alt="scene art" src=""></div>
+    <div id="sceneText" style="white-space:pre-wrap; line-height:1.65"></div>
+  </div>
+
+      <div class="section">
+        <div class="muted" style="font-size:12px; margin-bottom:8px">Actions</div>
+        <div class="controls">
+<input class="input" id="cmd" placeholder="行動（例：階段 / 話す / 調べる）" />
+          <button class="btn" id="doCmd">実行</button>
+        </div>
+        <div class="muted" style="font-size:12px; margin-top:8px">
+          
+        </div>
+      </div>
+<div style="border-top:1px solid var(--line); margin:14px 0 10px 0"></div>
+<div class="muted" style="font-size:12px; margin-top:10px; margin-bottom:6px">Talk Log</div>
+        <div class="talklog" id="talkLog"></div>
+
+
+      <div class="end" id="endBlock" style="display:none">
+        <div class="mono" id="endText"></div>
+      </div>
+    </div>
+  </section>
+
+  
+  <aside class="card">
+    <h2>Log & State</h2>
+    <div class="tabsHdr" style="margin-top:10px">
+      <button type="button" class="tabBtn active" id="tabState" onclick="setRightTab('state')">Status</button>
+      <button type="button" class="tabBtn" id="tabDocs" onclick="openDocsModal()">Docs<span id="docsBtnNew" class="btnNew" style="display:none">New</span></button>
+    </div>
+    <div class="content">
+      <div class="pane" id="paneState">
+<div class="kv" style="margin-bottom:10px">
+        <div id="lbl_p1">?????</div><div id="p1" class="bad">NO</div>
+        <div id="lbl_p2">?????</div><div id="p2" class="bad">NO</div>
+        <div id="lbl_token">?????</div><div id="token" class="bad">NO</div>
+        <div id="lbl_auth">?????</div><div id="auth" class="bad">NO</div>
+      </div>
+
+      <div class="muted" style="font-size:12px; margin-bottom:6px">Inventory</div>
+      <div class="kv" id="inv" style="margin-bottom:12px"></div>
+
+      
+    
+      <div class="section">
+        <div class="muted" style="font-size:12px; margin-bottom:8px">Storage</div>
+        <div class="controls">
+          <button class="btn danger" id="resetAll">全リセット</button>
+          <button class="btn" id="btnBackTo22" style="display:none" onclick="backToConsole22()">22:00の端末へ戻る</button>
+        </div>
+        <div class="muted" style="font-size:11px; margin-top:8px">※進行状況・取得済みログなどがすべて消えます。</div>
+      </div>
+      </div>
+      <div class="pane" id="paneDocs" style="display:none">
+        <div class="muted" style="font-size:12px; margin-bottom:8px">Docs</div>
+        <div class="docsWrap">
+          <div class="docsList" id="docsList"></div>
+          <div class="docView" id="docView"><span class="muted">未解放の資料は表示されません。</span></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="terminal">
+    <div class="termbar">
+      <div class="title">DAYLOCK CONSOLE // SEA&BUNNY</div>
+      <button class="btn ghost" id="closeOverlay">閉じる</button>
+    </div>
+    <div class="termbody" id="termOut"></div>
+    <div class="terminput">
+      <span class="mono">&gt;</span>
+      <input id="termIn" placeholder="COMMIT / ROLLBACK" />
+      <button class="btn primary" id="termRun">EXEC</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+
+(() => {
+  const LS_KEY = "sea_bunny_daylock_demo_v0_34";
+
+  
+  const PEOPLE = [
+    { id:"pero", name:"望月 ぺろ", ruby:"もちづき ぺろ", role:"S&B オーナー",
+      unlockHint:"店内の会話・証拠で解放",
+      pages:[
+        `PROFILE-01
+望月 ぺろはSea&Bunnyのオーナーで、1FのSea&Belugaも兼ねている。
+事業を広げるのが好きで、いつも次の話をしていた。
+
+毎晩、戸締りの最後に2Fテラスの定位置で手すりに身を預けて煙草を吸う癖がある。周りは危ないと言っても、本人は笑って流す。
+
+それでも——朝、声が聞こえたり姿が見えたりすると、無意識に肩の力が抜ける。
+安心していい理由なんて、たぶんないのに。
+
+`,
+        `PROFILE-02
+ぺろは時々「DAYLOCK」とだけ言って、肝心な中身を語らないことがあった。
+こちらが聞いても、照れたみたいに話を切る。勢いで押してくるのに、言えない話は言えない。
+
+強引で、自信家で、でも不意に優しい。
+その優しさを真正面から見せるのが、たぶん苦手だったんだと思う。
+
+「安全装置は、最後に効けばいい」
+ぺろは冗談みたいに言うけど、その目は笑っていなかった。`,
+        `PROFILE-03
+あとから思えば、ぺろが言っていたのは“店を守る仕組み”の話だった。
+事故やトラブルが起きたときに、取り返しがつくようにする――そのためのDAYLOCK安全装置。
+
+運用は店の人たちに広く知らせず、外に出さない形で回すつもりだったらしい。
+ぺろの死でDAYLOCK安全装置が過負荷を起こし、Memory Assistも壊れかけた。
+ログは残るが抜けることがある。ときどき、フラッシュバックみたいに戻る。
+
+そのために華那は“オペレーター”として指名された。
+ぺろが照れ隠しで言葉をぼかしたのは、秘密にしたかったというより、まっすぐ頼むのが恥ずかしかったからかもしれない。`
+]
+    },
+    { id:"nagisa", name:"遥月 凪紗", ruby:"はるつき なぎさ", role:"Sea&Beluga 店長",
+      unlockHint:"特定時刻の会話で解放",
+      pages:[
+        `PROFILE-01
+遥月凪紗。誕生日は、9月18日でSea&Belugaの店長をやっている。
+言葉がきつく見えるときがあるのは、余計なものを省いて判断したいからだと思う。
+
+現場を回すのがうまい。
+誰が何をして、どこが止まりやすいか――一度見たら、だいたい覚えている。`,
+        `PROFILE-02
+ぺろとは、何度か真正面からぶつかっている。
+原因はだいたい“新事業”の話だ。
+
+ぺろは勢いで形にするタイプで、走りながら直す。
+凪紗は逆で、最初に穴を潰してから進めたい。
+準備不足のまま客に出すのが、どうしても許せない。
+
+「やれば回る」
+「回ってからじゃ遅い」
+
+言い方はきつい。
+でも凪紗は、ぺろの夢を否定したいわけじゃない。
+ただ、店も人も壊したくないだけだ。
+
+衝突のあと、ぺろは笑って誤魔化した。
+凪紗は最後まで目を逸らさなかった。
+――あの事故が起きるまでは。`
+      ]
+    },
+    { id:"youka", name:"葉月 陽夏", ruby:"はづき ようか", role:"Sea&Bunny 副店長",
+      unlockHint:"Aルート関連の行動で解放",
+      pages:[
+        "PROFILE-01\n葉月陽夏はSea&Bunnyの副店長。口数は多くないけど、動きは軽い。\nおっとりして見えるのに、必要なときはちゃんと前に出る。周りから弟分扱いされるのも、たぶん慣れてる。\n\nぺろとは近い距離にいたはずなのに、肝心なところは噛み合っていなかった気がする。\n陽夏は、納得できる理由があれば受け入れる。逆に、理由が見えないと引っかかる。",
+        "PROFILE-02\nぺろが「新規事業」とだけ言っていた話を、陽夏は聞いている。\nでも中身は教えてもらえていない。ぺろはそういうとき、なぜか照れたみたいに話を切る。\n\nそれでも、陽夏はどこかで納得していたんだと思う。\n“みんなを守るためなら”、あの人はきっとやる。そういう確信だけは、形にならなくても残る。",
+        "PROFILE-03\n陽夏は現場で手を動かせる人だ。準備も片付けも、必要なら工作だってできる。\nだからこそ、陽夏が「知らない」と言うことと、「関係ない」と言うことは同じじゃない。\n\n望月 ぺろが事故で死んだ、と聞いたとき。\n陽夏は驚いた顔をしたあと、何も言わなくなった。\n泣きもしない。怒りもしない。代わりに、手順だけを確認した。\n――その沈黙が、いちばん重かった。\n\nぺろが中身を言わなかったのは、秘密だったからじゃなくて、照れくさかったからかもしれない。\n守るって言葉を、あの人は真正面から言えない。だから「新規事業」という言い方に逃げた。\n陽夏がその照れを受け入れていたなら——そのぶん、失ったものは大きい。\n\nそして陽夏は、たぶん今も引っかかっている。\n「事故」で片づけていいのか。\nあの人が最後に守ろうとしたものは、何だったのか。"
+      ]
+    },
+    { id:"nanase", name:"嘘月 七瀬", ruby:"うそづき ななせ", role:"Sea&Bunny ホール責任者",
+      unlockHint:"2F厨房前 13時の話すで解放",
+      pages:[
+        `PROFILE-01
+嘘月 七瀬はSea&Bunnyのホール責任者。口は悪いけど、ノリはいい。
+自称オタクで、悪ガキみたいな振る舞いをする。でもホールを回す力はある。そこは本物だ。
+
+軽い冗談の中に、たまに本音が混じる。聞き逃すと、あとで効いてくるタイプだと思う。
+七瀬は空気を作る側だ。誰を持ち上げて、誰をいじって、話題を流すか。
+その場の温度を読んで、言葉を選ぶというより、言葉で温度を変える。
+
+ただ、全部を正面から話す人ではない。
+ふざけているように見せて、都合の悪いところだけ薄めることもできる。笑っているから安心、とはならない。
+たまに、冗談が途切れて目が冷える瞬間がある。そこだけは、触れないほうがいい気がする。
+
+ホールに立っている分、七瀬は見ている範囲が広い。
+小さなやり取りや、変な沈黙や、目線の動き。そういうものを拾っているはずだ。
+
+だから七瀬の証言は役に立つ。けど、扱い方を間違えるとこちらが振り回される。
+七瀬が“わざと外した言い方”をしているときは、たぶん理由がある。`
+      ]
+    },
+    { id:"mahin", name:"彩月 茉陽", ruby:"いろづき まひん", role:"Sea&Bunny 料理担当",
+      unlockHint:"店内の会話で解放",
+      pages:[
+        `PROFILE-01
+彩月茉陽はSea&Bunnyの料理担当。場にいるだけで空気が明るくなるタイプだ。
+ちょっと関西っぽい喋り方で、距離の詰め方が上手い。初対面でも、いつの間にか会話が回っている。
+
+陽夏とは特に仲が良いらしくて、厨房でも名前がよく出る。
+厨房の人間は、店の“裏側”を一番見ている。だから茉陽の言葉は、雑談に見えても軽く扱えない。
+
+茉陽は人をよく見ている。表情とか、声の調子とか、言い淀みとか。本人が意識してるかは分からないけど、拾っている情報が多い。
+明るさは武器にもなる。空気を和らげることもできるし、話題を流すこともできる。優しさと要領の良さが、同じ場所にある感じがする。
+
+料理担当は“いつも通り”に敏感だ。仕込み、発注、在庫。小さな違和感が積み重なると、必ずどこかに痕が残る。厨房は嘘をつきにくい。
+茉陽が見ているのは、派手な事件より、日常のズレだ。
+だからこそ、ふとした一言が刺さることがある。本人が狙ってなくても、手がかりになってしまう。`
+      ]
+    },
+    { id:"kana", name:"那月華那", ruby:"なつき かな", role:"オペレーター",
+      unlockHint:"EX/証拠で解放",
+      pages:[
+        `PROFILE-01
+那月華那。誕生日は、6月3日でいまはSea&Bunnyで働いている。
+前はSea&Beluga（ベルーガ）にも関わっていた。だから、見て見ぬふりができないことが多い。
+
+気づいた違和感を、そのままにしておけない。
+いったん引っかかると、理由が分かるまで確かめたくなる。
+
+なぜ同じ一日が繰り返されるのか。その“起点”と“条件”を特定する。
+いつ・誰が・どんな操作や出来事でループが始まり、何を満たせば止まるのか――観測と検証で突き止める。`,
+        `PROFILE-02
+Belugaで働いていた時期がある。けれど、コンビニで悪事を働いた件が発覚して首になった。自業自得だと思う。
+それでも今はSea&Bunnyにいる。居場所って、案外きれいに割り切れない。
+
+現場の手順や表示のズレが目に入りやすい。
+時刻、メモ、配置、言い回し。小さい違和感を拾って、あとから筋道にしていく。
+
+ひとつ引っかかった違和感は、納得するまで潰したくなる。潔癖症で、使い捨て手袋をよく使う。
+必要なら聞き直して確認するし、集めた情報は何度でも並べ替える。最近は、その途中で――自分の記憶に抜けがあることにも気づき始めている。`,
+        `PROFILE-03
+この店は、思っていたより平和だった。
+軽犯罪なんて、そうそう起きない。起きないのはいいことなのに――装置の側からすると、動いているのかどうか分からなくなる。
+
+だから、定期的に“確認”していた。
+レジの金に手を出して、わざと軽い違反を起こす。最悪だと思う。
+でも、何に反応して、どこまで介入するのか。その境界だけは把握しておきたかった。
+
+確認が必要だと決めたのは自分で、やり方を選んだのも自分だ。
+平和な店で、わざわざ波風を立てるようなことをしている――その自覚だけは、ずっと消えない。`
+      ]
+    },
+    { id:"sanshiki", name:"老月 参式", ruby:"ろうづき さんしき", role:"Sea&Beluga 整備士",
+      unlockHint:"11時前後の会話で解放",
+      pages:[
+        "PROFILE-01\n老月参式はSea&Belugaの整備士。真面目で、言葉も丁寧だ。\nちょっと抜けているところはあるけど、ふざけてる感じじゃない。むしろ、気を張りすぎて抜けるタイプに見える。\n\n自分のことを「華那さん」と呼ぶ。前から知っている口ぶりで、そこだけ妙に現実を突きつけられる。\n整備士としての距離感は保っているのに、知らない顔はしない。そういう人だ。\n\n参式さんは、壊れたものを“直す”人だ。直らないなら、直らない理由を探す。\nだから、原因不明のトラブルを前にしても、焦りより先に観察が出る。\n\n今回の不具合は、普通の設備トラブルと少し違う気がする。\n落ち方が妙で、戻り方も変で、説明がつかないところが残る。参式さん自身は、まだそれを言葉にしきれていない。\n\nでも、参式さんが「おかしいですね」と言ったら——その一言は、かなり重い。\n\n参式さんは、機械の話になると落ち着く。\n最近は格ゲーにハマって寝不足らしくて、整体にも通ってる。肩こりがきついとか、手首も痛いとか——仕事の愚痴というより、日々の体調の話をぽつぽつする。\n\nただ、生活の話をする割に、仕事の核心には慎重だ。\n点検のこと、記録のこと、いつも通りの手順のこと。参式さんが「いつもと違う」と言うときは、本当に違うんだと思う。"
+]
+    },
+    { id:"genkin", name:"曄月 厳金", ruby:"あきづき げんきん", role:"Sea&Bunny スタッフ",
+      unlockHint:"1F階段（14:00）または2Fテラス（09:00）で厳金と会話",
+      pages:[
+        `PROFILE-01
+店ではだいたい、うさぎの着ぐるみ担当。
+驚かせるのが好きで、思いついたら即やるタイプ。言い方も態度も派手で、だいたい声がでかい。
+
+でも根っこは面倒見がいい。
+誰かが困ってると、最初に茶化してから、最後にはちゃんと助ける。
+特に華那が一人で抱え込みそうなときは、わざと軽口を叩いて距離を詰めて、逃げ道を作る。
+「別に手伝ってやるだけだし？」みたいな顔をしながら、必要なところは黙って支えてくる。
+
+海が見える場所が好きで、テラスの手すりにもたれてぼーっとしていることがある。
+口では「サプライズするから覚悟しとけよ」とか言うけど、あれは“怖がらせたい”より“元気づけたい”が先に来てる。
+
+いざという時に頼りになる、兄貴分みたいな男。`
+      ]
+    },
+    { id:"usagi", name:"野月 うさぎ", ruby:"のづき うさぎ", role:"Sea&Beluga 整備士",
+      unlockHint:"迷子騒動/会話で解放",
+      pages:[
+        "PROFILE-01\n野月うさぎはSea&Belugaの整備士。関西弁で、ノリが軽い。\n弟分っぽく見えるし、実際そう扱われるのにも慣れてる。迷子みたいにふらっと現れて、ふらっと消えるところがある。\n\n軽さは安心材料にもなる。\nでも、軽いからって中身まで軽いとは限らない。そこが怖い。",
+        "PROFILE-02\nうさぎは「知らん知らん」って言いながら、意外と見ている。\nふざけて話を逸らすのも上手いし、空気を和らげるのも上手い。だから油断しやすい。\n\n笑ってるときほど、何かを隠してる気がする。\n隠してるというより、“言わない選択”を慣れた手つきでやってる感じだ。",
+        "PROFILE-03\n整備士は現場に強い。工具も、鍵も、導線も。\nうさぎが本気を出せば、できることは多い。だからこそ、やらない理由が気になる。\n\n軽い言葉の奥に、やけに現実的な判断が混じることがある。\nその瞬間だけ、うさぎの立ち位置が分からなくなる。味方かどうかじゃなくて、どこを見て動いているのか——そこが読めない。"
+      ]
+    }
+  ];
+
+const LOCS = [
+    {id:1, name:"1F受付カウンター", desc:"掲示／控え"},
+    {id:2, name:"1F階段", desc:"通路／踊り場"},
+    {id:3, name:"1Fバックヤード", desc:"関係者区画"},
+    {id:4, name:"2Fレジ周り", desc:"カウンター周り"},
+    {id:5, name:"2F厨房前", desc:"仕込みの気配"},
+    {id:6, name:"2Fテラス", desc:"風の通り道"},
+    {id:7, name:"壁の端末", desc:"入力端末"},
+  ];
+
+  function getLocName(id){
+    const it = LOCS.find(l=>l.id===id);
+    return it ? it.name : `#${id}`;
+  }
+
+
+  // Unlock-by-text phrases (type the phrase if it appears in the current scene text)
+  const UNLOCK_PHRASES = [
+    { phrase: "1F階段", id: 2, also: ["1F階段前", "1F会談前", "階段"], autoObserve: false },
+    { phrase: "2Fレジ周り", id: 4, also: ["2Fレジ前", "レジ前", "レジ周り"] },
+    { phrase: "2F厨房前", id: 5, also: ["厨房前"] },
+    { phrase: "2Fテラス", id: 6, also: ["テラス"] },
+    { phrase: "壁の端末", id: 7, also: ["端末"] },
+    // Backyard remains special: unlocked after LOG①②③
+    { phrase: "1Fバックヤード", id: 3, also: ["バックヤード"] },
+    { phrase: "1F受付カウンター", id: 1, also: ["受付カウンター"] },
+  ];
+
+  function normalizeJP(s){
+    return (s||"").normalize("NFKC").trim().replace(/\s+/g, "");
+  }
+
+  function unlockPhrase(input){
+    const key = normalizeJP(input);
+    if(!key) return null;
+    for(const u of UNLOCK_PHRASES){
+      if(normalizeJP(u.phrase) === key) return u;
+      if(u.also && u.also.some(a => normalizeJP(a) === key)) return u;
+    }
+    return null;
+  }
+
+
+  
+  function escapeHtml(s){
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+  function formatCodeLine(line){
+    const t = escapeHtml(line);
+    const m = t.match(/^\[([A-Z0-9 _\-]+)\]\s*(.*)$/);
+    let tag = "", rest = t;
+    if(m){ tag = m[1]; rest = m[2]; }
+
+    const cls =
+      (tag==="OK"||tag==="OK ") ? "ok" :
+      (tag==="WARN") ? "warn" :
+      (tag==="ERR"||tag==="ERROR") ? "err" :
+      "tag";
+
+    const tagSpan = tag ? `<span class="tag">[</span><span class="${cls}">${tag}</span><span class="tag">]</span> ` : "";
+    const restSpan =
+      (cls==="err") ? `<span class="err">${rest}</span>` :
+      (cls==="warn") ? `<span class="warn">${rest}</span>` :
+      `<span class="dim">${rest}</span>`;
+    return `<span class="ln mono">${tagSpan}${restSpan}</span>`;
+  }
+
+
+  function pad2(n){ return (n<10?"0":"")+n; }
+
+  function defaultState(){
+    return {
+      talkProgress: {},
+      profiles: { kana: 1 },
+      loopCount: 1,
+      loop: 1,
+      timeMode: "HOUR",     // HOUR or CHECKPOINT or ENDED
+      hour: 7,              // 7..23
+      checkpoint: false,    // at 23:59
+      status: "DAYLOCKED",
+      location: 1,
+      unlockedLocations: [1],
+      observedPhrases: {},
+      // persistent findings
+      inventory: {
+        log1:false, log2:false, log3:false,        cabinetKey:false,
+      },
+      // per-loop state
+      precheck1:false, precheck2:false,
+      token:null,
+      checkDone:false,
+      auth:false,
+      consoleGranted:false,
+      // EX
+      stabilized:false,
+      perAlive:false,
+      operatorBound:false,
+      ended:null, // "COMMIT"
+      // docs
+      docs: {},
+      docsHasNew: false,
+      // log lines
+      lines: []
+    };
+  }
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if(!raw) return defaultState();
+      const st = JSON.parse(raw);
+      const merged = Object.assign(defaultState(), st);
+
+      // Sync/compat: keep loop and loopCount aligned across versions
+      if(typeof merged.loopCount !== "number"){
+        merged.loopCount = (typeof merged.loop === "number") ? merged.loop : 1;
+      }
+      if(typeof merged.loop !== "number"){
+        merged.loop = merged.loopCount || 1;
+      }
+
+
+      // Deep-merge nested objects to preserve new default keys
+      merged.inventory = Object.assign(defaultState().inventory, (merged.inventory||{}));
+      merged.profiles = Object.assign({}, defaultState().profiles, (merged.profiles||{}));
+      merged.observedPhrases = Object.assign({}, defaultState().observedPhrases, (merged.observedPhrases||{}));
+
+      // MIGRATION: guard against accidental "all profiles unlocked" buggy saves
+      try{
+        if(merged.profiles && typeof merged.profiles==="object"){
+          const unlockedKeys = Object.keys(merged.profiles).filter(k=>merged.profiles[k]>0);
+          if(unlockedKeys.length >= Math.max(3, PEOPLE.length-2) && (merged.hiddenLogsFound||0)===0 && (merged.loopCount||1)<=1){
+            merged.profiles = {};
+          }
+        }
+      }catch(e){}
+
+      // PATCH: keep Kana profile within valid range
+      if(merged.profiles && typeof merged.profiles==="object"){
+        const currentKana = merged.profiles.kana||0;
+        merged.profiles.kana = Math.max(1, Math.min(currentKana, 3));
+      }
+
+      return merged;
+    }catch(e){
+      return defaultState();
+    }
+  }
+  function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+  function nowTimeLabel(){
+    if(state.timeMode==="CHECKPOINT") return "23:59";
+    if(state.timeMode==="ENDED") return "24:00";
+    return pad2(state.hour)+":00";
+  }
+  // --- fancy clock (minutes roll-up, reaches :59) ---
+  let pulseTimeout = null;
+  let clockAnimating = false;
+  let lastClock = { hh: "07", mm: 0 }; // what we last rendered
+  let rafId = null;
+
+  function baseTimeForClockParts(){
+    if(state.timeMode==="CHECKPOINT") return {hh:"23", mm:59};
+    if(state.timeMode==="ENDED") return {hh:"24", mm:0};
+    return {hh: pad2(state.hour), mm:0};
+  }
+
+  function renderClock(hh, mm){
+    const t = document.getElementById("timeBig");
+    if(!t) return;
+    t.textContent = `${hh}:${pad2(mm)}`;
+  }
+
+  function stopClockAnim(){
+    if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
+    clockAnimating = false;
+  }
+
+  function setClockDisplay(animate=false){
+    const target = baseTimeForClockParts();
+    const t = document.getElementById("timeBig");
+    const sub = document.getElementById("timeSub");
+    if(!t) return;
+
+    sub.textContent = state.status;
+
+    if(!animate){
+      if(clockAnimating) return;
+      renderClock(target.hh, target.mm);
+      lastClock = { hh: target.hh, mm: target.mm };
+      return;
+    }
+
+    stopClockAnim();
+    clockAnimating = true;
+
+    // pulse
+    t.classList.remove("pulse");
+    void t.offsetWidth;
+    t.classList.add("pulse");
+    if(pulseTimeout) clearTimeout(pulseTimeout);
+    pulseTimeout = setTimeout(()=>t.classList.remove("pulse"), 650);
+
+    const startHH = lastClock.hh || target.hh;
+    const endHH = target.hh;
+    const hourChanges = (startHH !== endHH);
+    const toCheckpoint = (!hourChanges && target.mm === 59);
+
+    // Always roll minutes 00 -> 59 over durationMs
+    const durationMs = 520; // faster but reaches 59
+    const t0 = performance.now();
+
+    function tick(now){
+      const elapsed = now - t0;
+      const p = Math.min(1, elapsed / durationMs);
+      // progress minute 0..59
+      const mm = Math.min(59, Math.floor(p * 60));
+      renderClock(startHH, mm);
+
+      if(p < 1){
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
+
+      // finalize
+      if(toCheckpoint){
+        renderClock(startHH, 59);
+        lastClock = { hh: startHH, mm: 59 };
+        clockAnimating = false;
+        rafId = null;
+        return;
+      }
+
+      if(hourChanges){
+        // flip hour at :59 then snap minute
+        requestAnimationFrame(()=>{
+          renderClock(endHH, target.mm);
+          lastClock = { hh: endHH, mm: target.mm };
+          clockAnimating = false;
+          rafId = null;
+        });
+        return;
+      }
+
+      // same hour: snap to target minute (usually 00)
+      renderClock(endHH, target.mm);
+      lastClock = { hh: endHH, mm: target.mm };
+      clockAnimating = false;
+      rafId = null;
+    }
+
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function addLine(tag, text){
+    const t = nowTimeLabel();
+    state.lines.push({t, tag, text});
+    if(state.lines.length>200) state.lines.shift();
+
+    // Mirror TALK events into Talk Log (typewriter). Scene Log is handled per-command.
+    try{
+      if(tag === "TALK" && typeof talkLog !== "undefined"){
+        talkLog.pushTalk(t, text);
+      }
+    }catch(e){}
+  }
+
+  function addKeyword(word, note){
+    state.keywords = state.keywords || {};
+    if(state.keywords[word]) return false;
+    state.keywords[word] = { note: note||"", at: nowIso() };
+    // allow as command keyword too
+    state.observedPhrases = state.observedPhrases || {};
+    state.observedPhrases[word] = true;
+    addLine("KEY", `キーワード獲得：${word}${note?(" / "+note):""}`);
+        syncProfileUnlocksFromKeywords();
+
+  }
+
+  // Docs
+  const DOCS = [
+    {
+      id: "daylock_manual",
+      title: "DAYLOCK 取扱手順書",
+      subtitle: "キャビネット内資料",
+      body: `DAYLOCK 取扱手順書
+
+1. 目的
+DAYLOCKは、店舗運営中に発生する軽微な異常（誤操作・備品トラブル・軽犯罪等）に対し、状態の記録および手順に基づく復旧／確定を行うための装置です。
+
+2. 操作前提
+- 操作は認証済みオペレーターのみ実施してください。
+- 操作は端末上の手順に従い、ログを確認しながら実行してください。
+- 条件未達の場合、各操作は拒否されます。
+
+3. 基本操作
+3-1. SIGN
+- 操作権限を付与するための認証手順です。
+- 事前に CHECK を実行し、端末を認証受付状態にしてからSIGNしてください。
+- 認証に成功すると、以降の操作が可能になります。
+
+3-2. ROLLBACK
+- 直前の安全状態へ復旧します。
+- 主な用途：誤操作や軽微な異常の是正、状況確認のための復旧。
+- 注意事項：
+  - 連続実行は装置負荷が増大します。
+  - 装置ログ欠損・過負荷状態では、復旧精度が低下する場合があります。
+
+3-3. COMMIT（確定）
+- 記録された状態を確定し、以降の変更・復旧を不可とします。
+- 主な用途：運用上の判断が完了し、状態を固定する必要がある場合。
+- 注意事項：
+  - COMMIT後はロールバックできません。
+  - 実行には必要条件の充足が求められます。
+
+3-4. CHECK 
+- 端末の状態確認と未収集ログ（断片・欠損）の洗い出しを行います。
+- 本操作はSIGN（認証）前の事前確認として扱われます。
+- 手順：
+  1) 端末で CHECK を入力します。
+  2) 端末は未収集ログの一覧と簡易ステータスを表示します。 
+  3) 必要に応じて、該当の場所・時刻・条件へ向かいログを回収します。
+  4) 重要度が低い／現時点で回収不能なログは保留すること。 
+
+4. 運用上の注意
+- 操作ログは記録されます。
+- 不明点がある場合は管理者へ報告してください。
+- 端末／装置の異常を検知した場合、復旧操作を繰り返さず、現場責任者へ連絡してください。`
+    },
+
+{
+      id: "shift_today",
+      title: "シフト表（本日）",
+      subtitle: "スタッフ用 / 連絡事項あり",
+      html: `
+        <div class="docHtml">
+          <div class="docBanner">
+            <div class="k">TODAY</div>
+            <div class="t">■ 本日のシフト表</div>
+            <div class="s">　ベルーガ：凪紗：● 参式：● 野月：●<br>　バニー：陽夏：● 茉陽：● 七瀬：● 華那：✕<br>　※本日の休みは華那のみ。ほか担当は通常どおり準備・対応（変更があればここに追記）。</div>
+          </div>
+          
+          <div class="muted" style="font-size:12px;margin:0 0 8px 0;">メモ：次回営業（特別営業準備）</div>
+          <pre>
+【集合】
+- 16:30：搬入／仕込み（厨房・バー）
+- 17:30：全体集合（1F受付前）
+- 18:00：開店準備完了チェック
+
+
+【役割】
+- 受付：＿＿＿＿
+- 誘導：＿＿＿＿
+- ホール：＿＿＿＿
+- 厨房：＿＿＿＿
+- バー：＿＿＿＿
+- 整備／トラブル対応：＿＿＿＿（予備：＿＿＿＿）
+
+【時間帯（仮）】
+- 18:00-19:00：受付／ホール強め
+- 19:00-21:00：通常運用
+- 21:00-23:00：ピーク想定（補助 1名）
+- 23:00-24:00：片付け／締め
+
+
+【連絡事項】
+- 無線：CH＿＿
+- 緊急時：凪紗 → 参式 の順で連絡
+- 休み連絡はこのページに「欠員」として追記（後で確定版を入れ替え）
+
+          </pre>
+        </div>
+      `
+    }
+,
+    {
+      id: "old_letter",
+      title: "古びた手紙",
+      subtitle: "過去の華那から",
+      body: `華那へ。
+この手紙を読んでるってことは、たぶん――いや、ほぼ間違いなく。
+お前は「ぺろさんを生かす道」を選んだ。
+
+まず言っておく。
+それは間違いじゃない。
+ぺろは……救える。救えたはずだ。
+“今日は、それで済んだ”って顔をして、あいつは生きてる。
+
+でも同時に、ひとつだけ確定する。
+
+お前は、もう中には戻れない。
+世界は続く。23:59は来る。停電は来る。
+そしてまた同じ朝が始まる。
+
+お前だけが、少しずつ外側へ押し出される。
+声が届かない。呼ばれても、返事が返せない。
+
+「そこにいたはずなのに、いない」って扱いになる。
+
+最初は軽い違和感だ。
+でも回数を重ねるほど露骨になる。
+それが“永続オペレーター”の代償だ。
+
+それでも――
+それでも、救えた事実だけは嘘じゃない。
+だからお前は、次にやるべきことを間違えるな。
+
+終わらせ方は、ひとつじゃない。
+“確定”は、勝利じゃない。
+COMMITは……お前が思ってるよりずっと重い。
+ぺろの死だけじゃない。
+“ぺろがいない日常”が始まる。事後が始まる。
+そして、それは戻せない。
+
+だから、焦るな。
+まずは観測しろ。検証しろ。
+お前がずっとやってきた通りに。
+
+ただし、覚えておけ。
+壊れたものは、壊れたままじゃない。
+“最初の一回”だけ、例外が混じる。
+
+……これ以上は書かない。
+書いた瞬間、抜け落ちる。
+ここまで残せたのも、たぶん偶然だ。
+
+ぺろを救え。
+でも、終われないことを忘れるな。
+お前は、次の選択で自分を壊す。
+
+――那月華那`
+    }
+
+,
+    {
+      id: "log1",
+      title: "LOG①",
+      subtitle: "BonDCITY / 店舗概要",
+      body: `この町はBonDCITY。蒼葉木 拓斗が市長を務めてる。
+町にはギャングが多く犯罪が多発している。
+夜になるほど銃声やサイレンが日常に溶けて、誰も驚かなくなる。
+
+この店は、町から西海岸沿いにある。
+街灯の少ない道を抜けて、潮の匂いが強くなったあたり。
+1階がカーディーラー「sea& beluga」、2階が海が一望できる「Sea&Bunny」。
+階段を上がると、空気が変わる。
+下が“仕事”なら、上は“息継ぎ”だ。
+
+ここは安息地みたいな場所で、町の情勢に比べると――妙に平和に見える。
+だからこそ、違和感が目立つ。
+受付の記録、レジの釣銭、備品の数。小さなズレが、やけに大きく感じる。
+
+……でも今は、何かしらの原因でループが発生している。
+俺の記憶も、ところどころ欠けてる気がして気持ち悪い。
+「思い出せそうなのに、思い出せない」感覚だけが残ってる。
+そして一番怖いのは、“欠けた場所”がどこなのかさえ曖昧になってることだ。`
+    },
+    {
+      id: "kana_memory",
+      title: "華那の記憶",
+      subtitle: "起点メモ",
+      body: `DAYLOCKは本来、店で起きる「軽い事象」を想定した安全装置だった。
+誤操作、備品トラブル、軽犯罪――その程度なら、記録して、巻き戻して、なかったことにできる。
+
+でも、望月 ぺろは死んだ。
+あの日、装置は守れなかった。
+想定外の負荷がかかり、DAYLOCKは致命的に壊れた。
+付随する Memory Assist も、半壊のまま引きずられている。
+ログは残るのに、読み終えた瞬間に抜け落ちる。
+特定の時刻や音、場所でだけ、断片が焼き付くように蘇る。
+
+「安全装置があるのに、なぜ死んだのか」
+――その矛盾を追ううちに、考えてしまった。
+せめて、死ぬ前に戻せないか、と。
+
+禁じ手だと分かっていた。
+それでも、壊れたDAYLOCKを“救う”つもりで再起動をかけた。
+結果は最悪だった。
+
+フェイルセーフが安全側に固着して、
+07:00→23:59→巻き戻り、という一日だけが固定された。
+止まらない。終わらない。
+繰り返すたび、記憶は欠けるのに、責任だけが濃く残る。
+
+俺は起点を作った側で、止め方を探す側でもある。
+その矛盾を抱えたまま、同じ一日を見続けている。`
+    },
+
+    {
+      id: "log2",
+      title: "LOG②",
+      subtitle: "2Fテラス / 風とサイレン",
+      body: `2Fテラスに出ると、海が見える。風が強い日は、店の匂いまで全部さらっていく。
+ここだけは、Sea&Bunnyの“平和”の外側――BonDCITYの気配が、少しだけ戻ってくる。
+
+テラスの手すりは低くないのに、ふと足元が頼りなく感じる時がある。
+遠くの道路は見えるのに、近くの“角”が見えない。
+死角ってやつは、いつも人の視線の外にある。
+
+遠くでサイレンが鳴った気がした。
+その音だけ、やけに輪郭がはっきりする。
+――あの日も、こんなふうに「間に合わない距離」で鳴っていた。
+でもテラスの風は、音の形を簡単に変える。
+確かなのは、耳じゃない。胸の奥に残った“冷え”だけだ。
+
+前の事件でもそうだった。
+「見た」「聞いた」って言葉は、あっさり裏切る。
+時計がズレてるだけで、証言も順番も意味も崩れる。
+なのに人は、都合のいい方へ揃えてしまう。――揃えた“あと”で、真実みたいな顔をする。
+
+だから俺は、ここに出るたびに確認する。
+海の匂い、風の向き、遠くの音。
+そして、自分の記憶がどこまで“本物”か。`
+    },
+    {
+      id: "log3",
+      title: "LOG③",
+      subtitle: "厨房前 / 備品と手順",
+      body: `厨房前は、人の手が一番忙しい場所だ。
+油、洗剤、金属音。いつも何かが動いていて、止まらない。
+
+備品は揃ってる。揃ってるのに、合わない時がある。
+数が合わないと、誰かが嘘をつくことになる。
+嘘をついた人間から、順番に判断が狂う。
+
+手袋は、便利だ。
+便利すぎて、癖になる。
+片方だけでも、指先の感覚は変わる。
+変わった感覚は、判断を鈍らせる――だから“手順”が必要なんだと思う。
+
+それなのに、俺は一度だけ――装置に触った。
+壊れかけてるのは分かってたのに、立ち上げ直せば何かが戻る気がして。
+画面が一瞬だけ息を吹き返した時、嫌な予感がした。
+……あれが、始まりだったんじゃないか。`
+    }
+
+  ];
+
+  function setRightTab(which){
+    const paneState = document.getElementById("paneState");
+    const paneDocs  = document.getElementById("paneDocs");
+    const tabState  = document.getElementById("tabState");
+    const tabDocs   = document.getElementById("tabDocs");
+    // This build uses Docs in a modal only; keep the right pane on Status.
+    paneState.style.display = "block";
+    if(paneDocs) paneDocs.style.display = "none";
+    tabState.classList.add("active");
+    tabDocs.classList.remove("active");
+    state.uiRightTab = "state";
+  }
+  // Expose tab switcher for inline onclick
+  window.setRightTab = setRightTab;
+
+  function openDocsModal(){
+    // Opening Docs does not clear NEW; viewing each doc will.
+    recomputeDocsHasNew();
+    updateDocsButtonBadge();
+    const modal = document.getElementById("docsModal");
+    const bg = document.getElementById("docsModalBg");
+    const close = document.getElementById("dmClose");
+    if(!modal) return;
+
+    modal.classList.add("on");
+    modal.setAttribute("aria-hidden","false");
+
+    const doClose = ()=>{
+      modal.classList.remove("on");
+      modal.setAttribute("aria-hidden","true");
+    };
+    if(bg) bg.onclick = doClose;
+    if(close) close.onclick = doClose;
+
+    // Close on ESC
+    window.addEventListener("keydown", function esc(e){
+      if(e.key==="Escape"){ doClose(); window.removeEventListener("keydown", esc); }
+    });
+
+    // Render into modal
+    renderDocs("docsModalList","docsModalView");
+  }
+  window.openDocsModal = openDocsModal;
+
+
+  function isDocUnlocked(docId){
+    return !!(state.docs && state.docs[docId]);
+  }
+
+  function getDocMeta(docId){
+    if(!state.docs) state.docs = {};
+    const v = state.docs[docId];
+    if(v && typeof v === "object") return v;
+    if(v === true){
+      // backward compat (older versions stored boolean)
+      const meta = { unlocked:true, seen:false, unlockedAt:0 };
+      state.docs[docId] = meta;
+      return meta;
+    }
+    const meta = { unlocked:false, seen:false, unlockedAt:0 };
+    state.docs[docId] = meta;
+    return meta;
+  }
+
+  function recomputeDocsHasNew(){
+    // Only consider docs that exist in DOCS; ignore stray keys so loop/reset can't ghost a NEW badge.
+    if(!state.docs){ state.docsHasNew=false; return; }
+    const ids = (Array.isArray(DOCS) ? DOCS : []).filter(Boolean).map(d => d.id);
+    state.docsHasNew = ids.some((id)=>{
+      const v = state.docs[id];
+      if(v===true) return true; // legacy: treat as NEW until viewed once
+      return v && typeof v==="object" && v.unlocked && !v.seen;
+    });
+  }
+
+  function updateDocsButtonBadge(){
+    const el = document.getElementById('docsBtnNew');
+    if(!el) return;
+    el.style.display = state.docsHasNew ? 'inline-flex' : 'none';
+  }
+
+  function unlockDoc(docId){
+    const meta = getDocMeta(docId);
+    const wasUnlocked = !!(meta && meta.unlocked) || state.docs[docId]===true;
+    meta.unlocked = true;
+    meta.seen = false;
+    meta.unlockedAt = Date.now();
+
+    if(!wasUnlocked){
+      recomputeDocsHasNew();
+      updateDocsButtonBadge();
+    }else{
+      // even if already unlocked, keep badge state consistent
+      recomputeDocsHasNew();
+      updateDocsButtonBadge();
+    }
+    save();
+    renderDocs();
+  }
+
+  function renderDocs(listId="docsList", viewId="docView"){
+    const list = document.getElementById(listId);
+    const view = document.getElementById(viewId);
+    if(!list || !view) return;
+
+    list.innerHTML = "";
+    // Guard: DOCS may contain empty slots (e.g., stray commas) during editing
+    const unlocked = DOCS.filter(d => d && isDocUnlocked(d.id));
+    if(unlocked.length===0){
+      list.innerHTML = `<div class="docItem"><div class="t">資料なし</div><div class="s">未解放</div></div>`;
+      view.innerHTML = `<span class="muted">未解放の資料は表示されません。</span>`;
+      return;
+    }
+
+    unlocked.forEach((d) => {
+      const item = document.createElement("div");
+      item.className = "docItem";
+      const meta = getDocMeta(d.id);
+      const badge = (meta.unlocked && !meta.seen) ? `<span class="docNew">NEW</span>` : ``;
+      item.innerHTML = `<div class="t">${d.title}${badge}</div><div class="s">${d.subtitle||""}</div>`;
+      item.dataset.docId = d.id;
+      item.onclick = () => openDoc(d.id, viewId, listId, true);
+      list.appendChild(item);
+    });
+    // open the first unlocked doc by default
+    openDoc(unlocked[0].id, viewId, listId, false);
+  }
+
+  function openDoc(docId, viewId="docView", listId="docsList", markSeen=true){
+    const view = document.getElementById(viewId);
+    const doc = DOCS.find(d => d && d.id===docId);
+    if(!view || !doc) return;
+
+    // mark as seen
+    const meta = getDocMeta(docId);
+    if(markSeen && meta.unlocked && !meta.seen){
+      meta.seen = true;
+      recomputeDocsHasNew();
+      updateDocsButtonBadge();
+      save();
+      // update list badge without full rerender
+      const list = document.getElementById(listId) || document.getElementById("docsModalList") || document.getElementById("docsList");
+      if(list){
+        const item = list.querySelector(`.docItem[data-doc-id="${docId}"]`);
+        if(item){
+          const b = item.querySelector(".docNew");
+          if(b) b.remove();
+        }
+      }
+    }
+
+    // allow rich docs (HTML) for emphasis (e.g., shift banner)
+    if(doc.html){
+      view.innerHTML = doc.html;
+      return;
+    }
+    view.textContent = doc.body;
+  }
+
+
+
+  function playBlackoutOverlay(){
+    const bo = document.getElementById("blackout");
+    if(!bo) return Promise.resolve();
+    const codeEl = bo.querySelector(".bo-code");
+    if(codeEl) codeEl.innerHTML = "";
+
+    const BASE = [
+      "[DAYLOCK] bootstrap sequence ...",
+      "[MEM] mount: /assist/logcache",
+      "[MEM] integrity: WARN (packet loss)",
+      "[IO ] bus reset: OK",
+      "[CLK] drift detected: +00:15:xx",
+      "[AUTH] operator signature: REQUIRED",
+      "[SYS] rollback vector: ARMED",
+      "[PWR] blackout trigger: ENGAGE",
+      "[PWR] mains: OFFLINE",
+      "[WARN] UPS: 03% ... 02% ... 01%",
+      "[SYS] snapshot: COMMIT? (denied)",
+      "[WARN] MemoryAssist: checksum mismatch",
+      "[ERR] MemoryAssist: restore failed (E_CORRUPT_019)"
+    ];
+
+    const SPAM = [
+      "[ERR] restore failed (timeout)",
+      "[ERR] restore failed (timeout)",
+      "[ERR] restore failed (timeout)",
+      "[ERR] packet decode error (E_IO_044)",
+      "[ERR] packet decode error (E_IO_044)",
+      "[ERR] checksum mismatch (E_MEM_007)",
+      "[ERR] checksum mismatch (E_MEM_007)",
+      "[ERR] clock resync failed (E_CLK_011)",
+      "[ERR] clock resync failed (E_CLK_011)",
+      "[ERR] state vector: incomplete (E_STATE_112)",
+      "[ERR] state vector: incomplete (E_STATE_112)"
+    ];
+
+    const FEED = [];
+    for(const ln of BASE) FEED.push(ln);
+
+    // bursts of repeated errors
+    const bursts = 4;
+    for(let b=0;b<bursts;b++){
+      const burstLen = 8 + Math.floor(Math.random()*7); // 8-14
+      const pick = SPAM[Math.floor(Math.random()*SPAM.length)];
+      for(let k=0;k<burstLen;k++){
+        const r = Math.random();
+        if(r < 0.18) FEED.push("[WARN] retrying restore ...");
+        else if(r < 0.28) FEED.push("[ERR] retry failed (timeout)");
+        else FEED.push(pick);
+      }
+      if(Math.random() < 0.55) FEED.push("[WARN] fallback: minimal state");
+    }
+
+    FEED.push("[SYS] revert: executing...");
+    FEED.push("[ERR] clock resync failed → forcing rollback");
+    FEED.push("[SYS] boot vector: 07:00");
+    FEED.push("[WARN] operator state: desync");
+    FEED.push("[SYS] loop counter increment");
+    FEED.push("[OK ] ready (degraded mode)");
+    FEED.push("[OK ] ready (degraded mode)");
+    FEED.push("[OK ] ready (degraded mode)");
+
+    bo.classList.remove("on");
+    void bo.offsetWidth;
+    bo.classList.add("on");
+
+    let i = 0;
+    const stream = ()=>{
+      if(!bo.classList.contains("on")) return;
+      if(codeEl){
+        const chunk = FEED[Math.min(i, FEED.length-1)];
+        codeEl.innerHTML += formatCodeLine(chunk);
+        const rows = codeEl.querySelectorAll(".ln");
+        if(rows.length > 22){
+          for(let k=0;k<rows.length-22;k++) rows[k].remove();
+        }
+      }
+      i++;
+      if(i < 95) setTimeout(stream, 26);
+    };
+    stream();
+
+    return new Promise((resolve)=>{
+      setTimeout(()=>{
+        bo.classList.remove("on");
+        resolve();
+      }, 2300);
+    });
+  }
+
+
+  function playCountdownOverlay(mode="collapse"){
+    const cd = document.getElementById("countdown");
+    if(!cd) return Promise.resolve();
+    const timeEl = cd.querySelector(".cd-time");
+    const numEl = cd.querySelector(".cd-num");
+    const pad2 = (n)=> String(n).padStart(2,"0");
+
+
+    // If we want the screen to "loop" first, play the SAME countdown cinematic AFTER state has already been reset to 07:00.
+    // (Visual-only: does NOT touch state.loop/hour/location — those were already reset in revertLoop().)
+    if(mode === "post"){
+      state.timeMode = "COUNTDOWN";
+      setUILock(true);
+
+      const pad2 = (n)=> String(n).padStart(2,"0");
+
+      // run the cinematic from 23:59 -> 07:00, but purely as an overlay
+      let total = (23*60+59) - (7*60+0); // 1019 minutes
+      let hh = 23, mm = 59;
+
+      cd.classList.remove("on");
+      void cd.offsetWidth;
+      cd.classList.add("on");
+      cd.classList.add("tick");
+
+      return new Promise((resolve)=>{
+        const tick = ()=>{
+          if(timeEl){
+            timeEl.textContent = `${pad2(hh)}:${pad2(mm)}`;
+            timeEl.classList.toggle("j1");
+            timeEl.classList.toggle("j2");
+          }
+          if(numEl) numEl.textContent = "REBOOTING...";
+
+          if(total<=0){
+            if(timeEl) timeEl.textContent = "07:00";
+            cd.classList.remove("tick");
+            setTimeout(()=>{
+              // back to normal play (state already at 07:00)
+              state.timeMode = "HOUR";
+              setUILock(false);
+              setClockDisplay(false);
+              cd.classList.remove("on");
+              resolve();
+            }, 220);
+            return;
+          }
+
+          let step;
+          if(total > 180) step = 7 + Math.floor(Math.random()*13);    // 7..19
+          else if(total > 30) step = 3 + Math.floor(Math.random()*7); // 3..9
+          else step = 1;
+
+          if(step > total) step = total;
+
+          const cur = hh*60 + mm;
+          const next = cur - step;
+          hh = Math.floor(next/60);
+          mm = next % 60;
+          total -= step;
+
+          const delay = (total > 180) ? 26 : (total > 30 ? 34 : 50);
+          setTimeout(tick, delay);
+        };
+        tick();
+      });
+    }
+
+    // lock UI and prevent any action during the reboot cinematic
+    state.timeMode = "COUNTDOWN";
+    setUILock(true);
+
+    // collapse clock from 23:59 -> 07:00 (chunky at first, precise at the end)
+    let total = (23*60+59) - (7*60+0); // 1019 minutes
+    let hh = 23, mm = 59;
+
+    cd.classList.remove("on");
+    void cd.offsetWidth;
+    cd.classList.add("on");
+    cd.classList.add("tick");
+
+    return new Promise((resolve)=>{
+      const tick = ()=>{
+        if(timeEl){
+          timeEl.textContent = `${pad2(hh)}:${pad2(mm)}`;
+          timeEl.classList.toggle("j1");
+          timeEl.classList.toggle("j2");
+        }
+        if(numEl) numEl.textContent = "REBOOTING...";
+
+        if(total<=0){
+          if(timeEl) timeEl.textContent = "07:00";
+          cd.classList.remove("tick");
+          setTimeout(()=>{
+                    // advance loop number exactly at the time refresh moment
+          state.loop += 1;
+          state.loopCount = state.loop; // keep alias in sync
+          // Docs: unlock Memory Assist missing index after first loop begins
+          if(state.loop === 2){ try{ unlockDoc('mem_missing_index'); }catch(e){} }
+
+// finalize loop reset: re-enable normal play (movement consumes +1h)
+          state.timeMode = "HOUR";
+          state.hour = 7;
+          setUILock(false);
+          state.status = state.operatorBound ? "STABILIZED" : "DAYLOCKED";
+          setClockDisplay(false);
+
+          cd.classList.remove("on");
+          resolve();
+          }, 220);
+          return;
+        }
+
+        let step;
+        if(total > 180) step = 7 + Math.floor(Math.random()*13);    // 7..19
+        else if(total > 30) step = 3 + Math.floor(Math.random()*7); // 3..9
+        else step = 1;
+
+        if(step > total) step = total;
+
+        const cur = hh*60 + mm;
+        const next = cur - step;
+        hh = Math.floor(next/60);
+        mm = next % 60;
+        total -= step;
+
+        const delay = (total > 180) ? 26 : (total > 30 ? 34 : 50);
+        setTimeout(tick, delay);
+      };
+      tick();
+    });
+  }
+  // UI lock during countdown (prevents time/location desync)
+  function setUILock(locked){
+    state.uiLocked = !!locked;
+    document.body.classList.toggle("ui-locked", state.uiLocked);
+
+    // disable primary command controls immediately
+    const doCmd = document.getElementById("doCmd");
+    const cmd = document.getElementById("cmd");
+    if(doCmd) doCmd.disabled = state.uiLocked || doCmd.disabled;
+    if(cmd) cmd.disabled = state.uiLocked || cmd.disabled;
+
+    // disable location buttons (render() will also respect state.uiLocked)
+    document.querySelectorAll(".locbtn").forEach(b=>{
+      try{ b.disabled = state.uiLocked || (state.timeMode!=="HOUR"); }catch(e){}
+    });
+  }
+
+  
+  // UI: Locations / People tabs (not persisted)
+  let currentTab = "locs";
+  function setTabImpl(tab){
+    currentTab = tab;
+    const tabLocs = document.getElementById("tabLocs");
+    const tabPeople = document.getElementById("tabPeople");
+    const paneLocs = document.getElementById("paneLocs");
+    const panePeople = document.getElementById("panePeople");
+    if(tabLocs && tabPeople){
+      tabLocs.classList.toggle("active", tab==="locs");
+      tabPeople.classList.toggle("active", tab==="people");
+    }
+    if(paneLocs) paneLocs.style.display = (tab==="locs") ? "block" : "none";
+    try{ if(typeof addLine==="function"){ addLine("INFO", `TAB SWITCH: ${tab}`); } }catch(e){}
+    if(panePeople) panePeople.style.display = (tab==="people") ? "block" : "none";
+  }
+
+  // Backward-compat: some buttons call setTab() inline
+  function setTab(tab){ setTabImpl(tab); }
+  window.setTab = setTab;
+  window.setTabImpl = setTabImpl;
+
+
+
+  function getProfileLevel(personId){
+    // profiles are persistent across loops (only talkProgress resets)
+    if(!state.profiles) state.profiles = {};
+    // protagonist is known from the start
+    if(personId==="kana" && (!state.profiles.kana || state.profiles.kana<1)) state.profiles.kana = 1;
+
+    const p = PEOPLE.find(x=>x.id===personId);
+    const maxLv = p ? (p.pages?.length||0) : 99;
+
+    const lv = state.profiles[personId] || 0; // 0 locked, 1..n unlocked pages
+    return Math.max(0, Math.min(lv, maxLv));
+  }
+
+  function syncProfileUnlocksFromKeywords(){
+    // Kana profiles are unlocked by specific command completions.
+    // Keep within valid range (1..3) and avoid older saves forcing Lv4.
+    if(!state.profiles) state.profiles = {};
+    const cur = state.profiles.kana || 1;
+    state.profiles.kana = Math.max(1, Math.min(cur, 3));
+  }
+
+  function openProfile(personId){
+    const p = PEOPLE.find(x=>x.id===personId);
+    if(!p) return;
+    const lv = getProfileLevel(personId);
+    // Locked: do nothing (no hints/logs)
+    if(lv <= 0){
+      return;
+    }
+    const modal = document.getElementById("peopleModal");
+    const bg = document.getElementById("peopleModalBg");
+    const close = document.getElementById("pmClose");
+    const title = document.getElementById("pmTitle");
+    const sub = document.getElementById("pmSub");
+    const body = document.getElementById("pmBody");
+    if(title) title.textContent = p.name;
+    if(sub) sub.textContent = `${p.ruby} / ${p.role}`;
+    if(body){
+      body.innerHTML = "";
+      const pages = p.pages.slice(0, lv);
+      pages.forEach((pg, idx)=>{
+        const lines = (pg ?? "").toString().split("\n");
+        const head = (lines.shift() || "").trim();
+        let rest = lines.join("\n").trim();
+        // Auto line-break after Japanese句点 to improve readability
+        rest = rest
+          .replace(/。([」』】）\)])/g, "。$1\n")
+          .replace(/。(?!\n|$)/g, "。\n");
+
+        const pageEl = document.createElement("div");
+        pageEl.className = "profilePage";
+
+        const headEl = document.createElement("div");
+        headEl.className = "profileHeader";
+        headEl.textContent = head || `PROFILE-${pad2(idx+1)}`;
+
+        const contentEl = document.createElement("div");
+        contentEl.className = "profileContent";
+        // keep newlines
+        contentEl.innerHTML = escapeHtml(rest).replace(/\n/g, "<br>");
+
+        pageEl.appendChild(headEl);
+        pageEl.appendChild(contentEl);
+        body.appendChild(pageEl);
+
+        if(idx < pages.length-1){
+          const sep = document.createElement("div");
+          sep.className = "profileSep";
+          body.appendChild(sep);
+        }
+      });
+}
+    if(modal){
+      modal.classList.add("on");
+      modal.setAttribute("aria-hidden","false");
+    }
+    const doClose = ()=>{
+      if(modal){
+        modal.classList.remove("on");
+        modal.setAttribute("aria-hidden","true");
+      }
+    };
+    if(bg) bg.onclick = doClose;
+    if(close) close.onclick = doClose;
+    window.addEventListener("keydown", function esc(e){
+      if(e.key==="Escape"){ doClose(); window.removeEventListener("keydown", esc); }
+    });
+  }
+
+  function renderPeople(){
+    const el = document.getElementById("people");
+    if(!el) return;
+    el.innerHTML = "";
+    for(const p of PEOPLE){
+      const lv = getProfileLevel(p.id);
+      const row = document.createElement("div");
+      row.className = "personRow " + (lv>0 ? "unlocked" : "locked");
+      const left = document.createElement("div");
+      left.innerHTML = `<div class="personName">${escapeHtml(p.name)}</div><div class="muted" style="font-size:12px">${escapeHtml(p.role)}</div>`;
+      const badge = document.createElement("div");
+      badge.className = "badge " + (lv>0 ? "unlocked" : "locked");
+      badge.textContent = (lv>0) ? `UNLOCKED ${lv}/${p.pages.length}` : "LOCKED";
+      row.appendChild(left);
+      row.appendChild(badge);
+      row.onclick = ()=> openProfile(p.id);
+      el.appendChild(row);
+    }
+  }
+  // Scene Typewriter (replace scene text itself; no Scene Log)
+  let _sceneLast = null;
+  let _sceneTypingToken = 0;
+
+  // Scene Art switcher (Location 1:受付 / 2:階段 etc.)
+  const ASSET_BASE = "./assets/"; // 外部参照（GitHub Pages想定：相対パスでOK）
+
+  let ART_RECEPTION_SCENE = ASSET_BASE + "reception.png";
+  const ART_STAIR_SCENE    = ASSET_BASE + "stair.png";
+  const ART_TERRACE_SCENE  = ASSET_BASE + "terrace.png";
+
+  const ART_REGISTER_SCENE = ASSET_BASE + "register.png";
+  const ART_KITCHEN_SCENE  = ASSET_BASE + "kitchen.png";
+  const ART_BACKYARD_SCENE = ASSET_BASE + "backyard.png";
+  const ART_TERMINAL_SCENE = ASSET_BASE + "terminal.png";
+
+  function updateSceneArt(locId){
+    const img = document.getElementById('sceneArtImg');
+    if(!img) return;
+
+    // NOTE: Keep UX stable even if assets are missing.
+    // - Fade when switching
+    // - Hide image if load fails (no broken image icon)
+    const TARGET_OPACITY = 0.92;
+    let src = '';
+    if(locId === 2) src = ART_STAIR_SCENE;
+    else if(locId === 1) src = ART_RECEPTION_SCENE;
+    else if(locId === 3) src = ART_BACKYARD_SCENE;
+    else if(locId === 4) src = ART_REGISTER_SCENE;
+    else if(locId === 5) src = ART_KITCHEN_SCENE;
+    else if(locId === 6) src = ART_TERRACE_SCENE;
+    else if(locId === 7) src = ART_TERMINAL_SCENE;
+    else src = '';
+
+    // Token cancels late onload/onerror from previous requests
+    if(typeof updateSceneArt._tok === "undefined") updateSceneArt._tok = 0;
+    const tok = ++updateSceneArt._tok;
+
+    // Clean hide
+    if(!src){
+      img.style.opacity = '0';
+      img.style.display = 'none';
+      img.removeAttribute('src');
+      return;
+    }
+
+    // Prepare fade-out, then swap src
+    img.style.display = 'block';
+    img.style.opacity = '0';
+
+    img.onload = () => {
+      if(tok !== updateSceneArt._tok) return;
+      // next frame => ensures transition kicks in
+      requestAnimationFrame(() => {
+        if(tok !== updateSceneArt._tok) return;
+        img.style.opacity = String(TARGET_OPACITY);
+      });
+    };
+    img.onerror = () => {
+      if(tok !== updateSceneArt._tok) return;
+      img.style.opacity = '0';
+      img.style.display = 'none';
+      img.removeAttribute('src');
+    };
+
+    if(img.getAttribute('src') !== src){
+      img.setAttribute('src', src);
+    }else{
+      // Same image already set. Still fade-in.
+      requestAnimationFrame(() => {
+        if(tok !== updateSceneArt._tok) return;
+        img.style.opacity = String(TARGET_OPACITY);
+      });
+    }
+  }
+
+
+  function updateSceneTypewriter(nextText){
+    const el = document.getElementById("sceneText");
+    if(!el) return;
+    const text = (nextText ?? "").toString();
+    if(text === _sceneLast) return; // avoid re-typing on frequent renders
+    _sceneLast = text;
+
+    const myToken = ++_sceneTypingToken;
+    el.textContent = "";
+    // simple typewriter (keeps newlines)
+    let i = 0;
+    const speed = 30; // ms per char (tweak as needed)
+
+    function step(){
+      if(myToken !== _sceneTypingToken) return; // canceled by newer scene
+      if(i >= text.length){
+        return;
+      }
+      // append chunk (keep it small to preserve readability)
+      const chunk = text.slice(i, i+1);
+      el.textContent += chunk;
+      i += chunk.length;
+      setTimeout(step, speed);
+    }
+    step();
+  }
+
+
+function render(){
+    document.getElementById("loop").textContent = pad2(state.loop);
+    document.getElementById("status").textContent = state.status;
+    if(!clockAnimating) setClockDisplay(false);
+// end block
+    const endBlock = document.getElementById("endBlock");
+    if(state.timeMode==="ENDED"){
+      endBlock.style.display = "block";
+      document.getElementById("endText").textContent = state.ended==="COMMIT" ? "" : "ENDED";
+      if(state.ended==="COMMIT") endBlock.style.display = "none";
+    updateDocsButtonBadge();
+  } else {
+      endBlock.style.display = "none";
+    }
+// side location buttons
+    const locs = document.getElementById("locs");
+    locs.innerHTML = "";
+    for(const l of LOCS){
+      if(l.id !== 1 && !state.unlockedLocations.includes(l.id)) continue;
+      const b = document.createElement("button");
+      b.className = "locbtn" + (l.id===state.location ? " active" : "");
+      const meta = (l.desc && String(l.desc).trim()) ? `<span class="locMeta">${escapeHtml(String(l.desc))}</span>` : "";
+      b.innerHTML = `<span class="locName"><span class="locTitle">${escapeHtml(String(l.name))}</span>${meta}</span>`;
+      b.disabled = (state.timeMode!=="HOUR") || !!state.uiLocked;
+      b.title = "移動（+1h）";
+      b.onclick = () => {
+        if(state.timeMode!=="HOUR" || state.uiLocked) return;
+        // 이동은 +1h を消費
+        const fromT = nowTimeLabel();
+        state.location = l.id;
+        onEnterLocation();
+        advanceHour();
+        const toT = nowTimeLabel();
+        addLine("MOVE", `MOVE -> ${l.name} (${fromT}→${toT})`);
+        render();
+    renderPeople();
+    // keep tab visibility
+    setTab(currentTab);
+
+        save();
+      };
+      locs.appendChild(b);
+    }
+    // Failsafe: if nothing rendered, force location 1
+    if(locs.children.length===0){
+      state.unlockedLocations = [1];
+      state.location = 1;
+      const l = LOCS.find(x=>x.id===1);
+      if(l){
+        const b = document.createElement("button");
+        b.className = "locbtn active";
+        b.innerHTML = `${l.name}`;
+        b.title = "移動（+1h）";
+        b.onclick = () => {
+          if(state.timeMode!=="HOUR" || state.uiLocked) return;
+          const fromT = nowTimeLabel();
+          state.location = l.id;
+          onEnterLocation();
+          advanceHour();
+          const toT = nowTimeLabel();
+          addLine("MOVE", `MOVE -> ${l.name} (${fromT}→${toT})`);
+          render();
+          save();
+        };
+        locs.appendChild(b);
+      }
+    }
+    const loc = LOCS.find(x=>x.id===state.location);
+// state pills
+    document.getElementById("p1").textContent = state.precheck1 ? "YES" : "NO";
+    document.getElementById("p1").className = state.precheck1 ? "ok" : "bad";
+    document.getElementById("p2").textContent = state.precheck2 ? "YES" : "NO";
+    document.getElementById("p2").className = state.precheck2 ? "ok" : "bad";
+    document.getElementById("token").textContent = state.token ? state.token : "NO";
+    document.getElementById("token").className = state.token ? "ok" : "bad";
+    document.getElementById("auth").textContent = state.auth ? "YES" : "NO";
+    document.getElementById("auth").className = state.auth ? "ok" : "bad";
+
+    // mask labels until YES
+    document.getElementById("lbl_p1").textContent = state.precheck1 ? "PRECHECK-01" : "?????";
+    document.getElementById("lbl_p2").textContent = state.precheck2 ? "PRECHECK-02" : "?????";
+    document.getElementById("lbl_token").textContent = state.token ? "SESSION TOKEN" : "?????";
+    document.getElementById("lbl_auth").textContent = state.auth ? "AUTH (SIGN)" : "?????";
+
+
+    // inventory
+    const inv = document.getElementById("inv");
+    inv.innerHTML = "";
+    const invPairs = [
+      ["LOG①", state.inventory.log1],
+      ["LOG②", state.inventory.log2],
+      ["LOG③", state.inventory.log3],
+
+      [state.inventory.cabinetKey ? "CABINET KEY" : "?????", state.inventory.cabinetKey],
+      [state.perAlive ? "PERO ALIVE" : "?????", state.perAlive],
+      [state.operatorBound ? "OP BOUND" : "?????", state.operatorBound],
+
+      [(state.observedPhrases["1F階段前"] ? "OBS: 1F階段前" : "OBS: ?????"), !!state.observedPhrases["1F階段前"]],
+      [(state.observedPhrases["2Fレジ周り"] ? "OBS: 2Fレジ周り" : "OBS: ?????"), !!state.observedPhrases["2Fレジ周り"]],
+      [(state.observedPhrases["2F厨房前"] ? "OBS: 2F厨房前" : "OBS: ?????"), !!state.observedPhrases["2F厨房前"]],
+      [(state.observedPhrases["2Fテラス"] ? "OBS: 2Fテラス" : "OBS: ?????"), !!state.observedPhrases["2Fテラス"]],
+      [(state.observedPhrases["壁の端末"] ? "OBS: 壁の端末" : "OBS: ?????"), !!state.observedPhrases["壁の端末"]],
+      [(state.observedPhrases["1Fバックヤード"] ? "OBS: 1Fバックヤード" : "OBS: ?????"), !!state.observedPhrases["1Fバックヤード"]],
+    ];
+    for(const [k,v] of invPairs){
+      const a = document.createElement("div"); a.textContent = k;
+      const b = document.createElement("div"); const isObs = String(k).startsWith("OBS:");
+      b.textContent = v ? "YES" : "NO";
+      b.className = v ? "ok" : "bad";
+      inv.appendChild(a); inv.appendChild(b);
+    }
+
+    // scene
+    updateSceneArt(state.location);
+    updateSceneTypewriter(buildSceneText());
+
+    // Docs: unlock terrace handrail fragment when you reach 2Fテラス at 17:00
+    if(state.timeMode==='HOUR' && state.location===6 && state.hour===17){
+      try{ unlockDoc('frag_terrace_rail'); }catch(e){}
+    }
+
+
+    // 24:00 (ENDED) helper: allow jumping back to 22:00 terminal
+    const btnBackTo22 = document.getElementById('btnBackTo22');
+    if(btnBackTo22) btnBackTo22.style.display = (state.timeMode==='ENDED') ? 'inline-flex' : 'none';
+
+    // log
+    const log = document.getElementById("log");
+    log.innerHTML = "";
+    if(state.lines.length===0){
+      // (empty)
+    } else {
+      for(let i=state.lines.length-1;i>=0;i--){
+        const l = state.lines[i];
+        // Field Log should not show Talk contents
+        if(String(l.tag||"").toUpperCase()==="TALK") continue;
+        const wrap = document.createElement("div");
+        const kind = String(l.tag||"").toLowerCase();
+        wrap.className = "line " + kind;
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+
+        const bTime = document.createElement("span");
+        bTime.className = "badge time";
+        bTime.textContent = l.t;
+
+        const bKind = document.createElement("span");
+        bKind.className = "badge kind";
+        bKind.textContent = l.tag;
+
+        meta.appendChild(bTime);
+        meta.appendChild(bKind);
+
+        const msg = document.createElement("div");
+        msg.className = "msg";
+        msg.textContent = l.text;
+
+        wrap.appendChild(meta);
+        wrap.appendChild(msg);
+        log.appendChild(wrap);
+      }
+    }
+
+
+    // Auto-scroll Field Log to latest
+    try{ log.scrollTop = 0; }catch(e){}
+    // keep people list in sync
+    try{ renderPeople(); }catch(e){}
+
+
+    // buttons enable/disable
+const doCmd = document.getElementById("doCmd");
+    const cmd = document.getElementById("cmd");
+    const ended = state.timeMode==="ENDED";
+doCmd.disabled = ended || (state.timeMode==="CHECKPOINT") || (state.timeMode==="COUNTDOWN") || !!state.uiLocked;
+    cmd.disabled = ended || (state.timeMode==="CHECKPOINT") || (state.timeMode==="COUNTDOWN") || !!state.uiLocked;
+  }
+
+  function escapeHtml(s){
+    return (s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+  }
+
+  function buildSceneText(){
+if(state.timeMode==="ENDED"){
+  if(state.ended==="COMMIT"){
+    return `24:00。
+
+……来ない。
+停電も、あの“巻き戻りの気配”も。
+
+端末の画面だけが白く残っている。
+さっきまで“入力”だったものが、もうただの記録に見えた。
+
+店の奥で冷蔵庫の低い唸りが続いて、
+遠くで誰かが何かを置く音がした。
+いつもと同じはずの生活音が、今日はやけに現実的だ。
+
+華那は反射で天井を見上げてしまう。
+次の瞬間に真っ暗になる――そのはずだった。
+
+でも、明かりは落ちない。
+
+止まった。
+……いや、止めた。
+
+視線が落ちる。
+端末の足元、拭いた跡がある床。
+落ちきらない薄い黒ずみが、そこに何かがあったことだけを残している。
+
+少し離れたところに、小さな物が転がっていた。
+擦れたライター。
+ひびの入った灰皿。
+どうでもいいはずの痕跡が、今は針みたいに刺さる。
+
+――ぺろの、だ。
+
+喉がきゅっと縮む。
+息を吐いても、胸の重さは動かなかった。
+
+ここから先は、
+ぺろがいない日常だ。
+“事後”だけが、延々と続く。
+
+華那は何度も瞬きをして――
+それでも、明かりは落ちなかった。
+
+「……戻らない」
+
+短い声が、店のどこにも吸われず残った。`;
+  }
+  if(state.ended==="EX_ROLLBACK"){
+    return `24:00。
+
+端末の光が一度だけ揺れて、
+巻き戻りの感触が――途中で、途切れた。
+
+暗転しない。
+世界が、落ちない。
+
+店の奥で冷蔵庫が低く唸っている。
+どこかで扉が開いて、誰かの笑い声がした。
+“次”の音だ。
+今まで何度も奪われてきた、明日の音。
+
+足元を見る。
+拭いた跡が残っていたはずの床は、きれいだった。
+黒ずみも、傷も、最初から無かったみたいに。
+
+その「無さ」が、胸に刺さる。
+消えたんじゃない。
+――まだ起きていないだけだ。
+
+華那は息を吸う。
+喉の奥が痛いくらい、空気が現実だ。
+
+端末には短い一行だけが残っている。
+
+rollback: APPLIED (one-time exception)
+
+例外は、もうない。
+ここから先は、やり直しじゃなく――一回きりだ。
+
+「……今度は」
+
+呟いた声が、どこにも吸われず残る。
+
+明日は来る。
+ぺろも、いる。
+だからこそ。
+
+今度は、俺が守る番だ。`;
+  }
+  return "静寂。\n\n— ここから先は、戻れない。";
+}
+    if(state.timeMode==="CHECKPOINT"){
+      return "停電の前兆が止まった。\nあるいは——止まらなかった。";
+    }
+    const t = state.hour;
+    const loc = state.location;
+
+
+    const at12 = (t===12);
+    const at18 = (t===18);
+    const at22 = (t===22);
+    const at23 = (t===23);
+    // scene builder buffer
+    let out = "";
+
+
+    // 1F受付カウンター（Sea&Beluga側）
+    if(loc===1){
+      if(t===7){
+        out += "『Sea&Beluga』の受付カウンター。\n";
+        out += "ガラス越しに展示車の輪郭が薄く見える。照明は落ちていて、まだ開店前だ。\n";
+        out += "空調だけが規則正しく回り、足音も会話もない。\n\n";
+        out += "受付は無人だ。\n";
+        out += "この時間は、誰にも邪魔されない。\n\n";
+        out += "同じ建物の上階には『Sea&Bunny』がある。\n";
+        out += "カウンター越しに、階段の方向が視界に入る。\n";
+        return out;
+      }
+      if(t>=8 && t<=10){
+        out += "『Sea&Beluga』の受付カウンター。\n";
+        out += "ガラス越しに展示車の輪郭が薄く見える。照明はまだ落ち気味で、開店準備の時間だ。\n\n";
+        out += "奥のほうで、人の気配がする。\n";
+        out += "凪紗が開店の準備に追われているみたいだ。\n";
+        out += "整備の修理部品を棚から抜き出して数を見て、チェック表に迷いなく書き込んでいく。手を止めない。\n";
+        out += "話すなら、タイミングを見たほうがいい。\n";
+        return out;
+      }
+      if(t===11){
+        out += "『Sea&Beluga』の受付カウンター。\n";
+        out += "朝の静けさはもうない。遠くで工具の音がして、店が動き始めている。\n\n";
+        out += "受付に、参式がいる。\n";
+        out += "目が合うと、軽く会釈だけして――それから、いつもの調子でこちらを見た。\n";
+        return out;
+      }
+      if(t===12){
+        out += "『Sea&Beluga』の受付カウンター。\n";
+        out += "昼休憩の時間なのか、周りに人が見当たらない。\n";
+        out += "受付は整ったままで、動いた気配だけが薄く残っている。\n\n";
+        out += "空調の風だけが、同じ調子で回っている。\n";
+        return out;
+      }
+      if(t===13 || t===14){
+        out += "『Sea&Beluga』の受付カウンター。\n";
+        out += "店は回っているのに、ここだけ少し静かだ。\n";
+        out += "書類の端が揃っていて、ペンの位置まで整っている。\n";
+        out += "必要なら、短い確認くらいはできそうだ。\n";
+        return out;
+      }
+      if(t>=15 && t<=17){
+        out += "『Sea&Beluga』の受付カウンター。\n";
+        out += "夕方に向けて、整備と受付の気配が濃くなる。\n";
+        out += "人が通るたびに、空気が少しだけ入れ替わる。\n";
+        if(t===17){
+          out += "厳金がクレーンゲームの前に陣取って、アームの動きを睨んでいる。\n";
+          out += "景品が少しだけ揺れて戻るたび、厳金が小さく笑った。\n";
+        }
+        out += "長居はしづらいが、要点だけなら押さえられる。\n";
+        return out;
+      }
+      if(t===18){
+        out += "『Sea&Beluga』の受付カウンター。\n";
+        out += "一瞬だけ手が止まる時間帯。受付が空く瞬間がある。\n";
+        out += "見落としていた紙や掲示が、目に入りやすい。\n";
+        return out;
+      }
+      if(t===19 || t===20){
+        out += "『Sea&Beluga』の受付カウンター。\n";
+        out += "人の出入りが増える。上階のざわめきも、ここまで降りてくる。\n";
+        out += "話すなら短く。見るなら素早く。\n";
+        return out;
+      }
+      if(t===20){
+        out += "『Sea&Beluga』の受付カウンター。\n";
+        out += "厳金が受付の周りを行ったり来たりしている。\n";
+        out += "カウンターの下を覗き込み、引き出しを開けては閉め、落ち着きがない。\n";
+        out += "床に目を凝らして、何か小さいものを探しているみたいだ。\n";
+        out += "『あー、くそ…』と小さく舌打ちが聞こえた。\n";
+        return out;
+      }
+      if(t===22){
+        out += "『Sea&Beluga』の受付カウンター。\n";
+        out += "片付けと明日の準備が混ざる時間帯だ。\n";
+        out += "受付は整っているが、どこか慌ただしい。\n";
+        return out;
+      }
+      if(t===22){
+        out += "『Sea&Beluga』の受付カウンター。\n";
+        out += "人の気配が薄くなって、空間が戻る。\n";
+        out += "今なら落ち着いて確認できそうだ。\n";
+        return out;
+      }
+      out += "『Sea&Beluga』の受付カウンター。\n";
+      out += "受付は整ったままだ。\n";
+      return out;
+    }
+
+
+
+    // 1Fバックヤード（薄め運用＋シフト表は調べる）
+    if(loc===3){
+      if(t===7){
+        out += "1Fバックヤード。\n";
+        out += "薄暗く、まだ人の気配がない。箱と棚が静かに並んでいる。\n";
+        return out;
+      }
+
+      if(t>=8 && t<=10){
+        out += "1Fバックヤード。\n";
+        out += "開店前の空気が残っていて、落ち着いて周りを見られそうだ。\n";
+        out += "備品と紙の束が整っている。\n";
+        if(t===9){
+          out += "凪紗は作業台の前で、車のパーツを手早く並べている。\n";
+          out += "金属の小さな音と、工具が触れ合う乾いた音が続く。\n";
+        }
+        return out;
+      }
+
+      if(t===11){
+        out += "1Fバックヤード。\n";
+        out += "店が回り始めて、奥でも人の出入りが増える。長居はしづらい。\n";
+        out += "よく見ると、壁にシフト表が貼り付けてある。\n";
+        return out;
+      }
+
+      if(t===12){
+        out += "1Fバックヤード。\n";
+        out += "店が回り始めて、奥でも人の出入りが増える。長居はしづらい。\n";
+        out += "凪紗が作業台の端で、伝票みたいな紙と端末を見比べている。\n";
+        out += "型番を指で追って、メモを取り、短く頷いた。\n";
+        out += "部品の発注をしているみたいだ。\n";
+        return out;
+      }
+
+      if(t===13 || t===14){
+        out += "1Fバックヤード。\n";
+        out += "少しだけ落ち着いた気配がある。補充や確認の途中みたいな空気だ。\n";
+        return out;
+      }
+
+      if(t===17){
+        out += "1Fバックヤード。\n";
+        out += "作業台の近くで、凪紗が小さく舌打ちしている。\n";
+        out += "眉間に皺を寄せ、紙束を雑に揃えて——深く息を吐いた。\n";
+        out += "悪態の最後だけ、声が掠れた。\n";
+        return out;
+      }
+
+      if(t>=15 && t<=16){
+        out += "1Fバックヤード。\n";
+        out += "夕方に向けた準備で、棚の前に立つと邪魔になりそうだ。\n";
+        return out;
+      }
+
+      if(t===18 || t===19){
+        out += "1Fバックヤード。\n";
+        out += "忙しさがここまで届いている。必要な用だけ済ませて出たほうがよさそうだ。\n";
+        return out;
+      }
+
+      if(t===20){
+        out += "1Fバックヤード。\n";
+        out += "厳金がバックヤードをうろうろして、棚や箱の中を覗き込んでいる。\n";
+        out += "ラベルを指で弾いて読んだり、適当に引き出しを開けては閉めたり。\n";
+        out += "鼻歌まじりに棚を漁って、見つからないと分かると肩をすくめている。\n";
+        return out;
+      }
+
+      if(t===20){
+        out += "1Fバックヤード。\n";
+        out += "凪紗が作業台の上を片付けて、工具を静かにケースへ戻している。\n";
+        out += "作業着の袖をまくり直して、ロッカーの方へ視線を投げた。\n";
+        out += "帰る準備をしているみたいだ。\n";
+        return out;
+      }
+
+      if(t===22){
+        out += "1Fバックヤード。\n";
+        out += "凪紗は帰る支度を済ませたまま、腰掛けて時間を潰している。\n";
+        out += "何かを待っているみたいに、たまに入口の方へ視線をやった。\n";
+        out += "指先で机を軽く叩いて、すぐやめる。落ち着かない沈黙だけが残る。\n";
+        return out;
+      }
+
+      if(t===23){
+        out += "1Fバックヤード。\n";
+        out += "物音が減って、空間が戻る。今ならじっくり確認できそうだ。\n";
+        return out;
+      }
+
+      out += "1Fバックヤード。\n";
+      out += "棚の影が伸びている。\n";
+      return out;
+    }
+
+// 1F階段（シーン確定）
+    if(loc===2){
+      if(t>=8 && t<=10){
+        out += "1Fの階段。\n";
+        out += "上階へ続く踊り場の手前で、空気が少し変わる。\n";
+        out += "右手には、細い下り階段が口を開けている。\n";
+        out += "そして――なぜか、うさぎの着ぐるみが置いてある。\n";
+        out += "頭の部分が、階段の影に半分だけ沈んでいた。\n";
+        return out;
+      }
+      if( t===11){
+        out += "1Fの階段。\n";
+        out += "人の出入りが少し増えてきた。\n";
+        out += "上から降りてくる足音と、店内の雑音が混ざる。\n";
+        return out;
+      }
+      if(t===12){
+        out += "1Fの階段。\n";
+        out += "Sea&Bunnyが一番混む時間だ。\n";
+        out += "レジ前のざわめきが、階段を伝って降りてくる。\n";
+        return out;
+      }
+      if(t===13){
+        out += "1Fの階段。\n";
+        out += "客足がぞろぞろ帰っていく。\n";
+        out += "今だけ少し、呼吸がしやすい。\n";
+        return out;
+      }
+      if(t===14){
+        out += "1Fの階段。\n";
+        out += "静かだ。\n";
+        out += "休憩が遅れた人が、少しだけ上へ上がっていく。\n";
+        out += "――うさぎの着ぐるみが、少し動いた気がする。\n";
+        return out;
+      }
+      if(t===15){
+        out += "1Fの階段。\n";
+        out += "ぺろさんが、上階へ上がっていく。\n";
+        out += "声をかけようと思えば、かけられそうだ。\n";
+        return out;
+      }
+      if(t===16){
+        out += "1Fの階段。\n";
+        out += "茉陽が、上から降りてくる。\n";
+        return out;
+      }
+      if(t===17){
+        out += "1Fの階段。\n";
+        out += "茉陽が、玄関から買い出し帰りだ。\n";
+        out += "腕いっぱいに食材を抱えている。\n";
+        return out;
+      }
+      if(t===18){
+        out += "1Fの階段。\n";
+        out += "本格的に忙しくなる。\n";
+        out += "上階の熱が、階段まで落ちてくる。\n";
+        return out;
+      }
+      if(t===19){
+        out += "1Fの階段。\n";
+        out += "忙しさが一段上がる。\n";
+        out += "レジの呼び声と、厨房の皿が鳴る音が交互に飛んでくる。\n";
+        return out;
+      }
+      if(t===20){
+        out += "1Fの階段。\n";
+        out += "行き来が途切れない。\n";
+        out += "踊り場に立つと、店全体の『流れ』が見える。\n";
+        return out;
+      }
+      if(t===21){
+        out += "1Fの階段。\n";
+        out += "ピークの気配。\n";
+        out += "上から落ちてくる足音が、何度も同じリズムをなぞる。\n";
+        return out;
+      }
+      if(t===22){
+        out += "1Fの階段。\n";
+        out += "閉店へ向けて、空気が少しずつ軽くなる。\n";
+        out += "――でも、この時間が一番危ない。\n";
+        return out;
+      }
+      if(t===23){
+        out += "1Fの階段。\n";
+        out += "片付けの音が増えて、店が『終わり』を思い出す。\n";
+        out += "今なら、落ちているものを探す余裕がある。\n";
+        return out;
+      }
+      out += "1Fの階段。\n";
+      return out;
+    }
+
+    switch(loc){
+
+      case 4: {
+        // 2Fレジ周り（描写確定：08 / 09 / 10 / 14 / 23）
+        if(t===8){
+          out += "『Sea&Bunny』のレジ周り。\n";
+          out += "レジ周りはまだ開店前の静けさが残っている。\n";
+          out += "陽夏は引き出しを開け、釣り銭の束を指先で揃えながら数えていた。\n";
+          out += "トレーの小銭を仕分け、伝票の束を確認して、ペンのインクまで試し書きしている。\n";
+          out += "「開店前に全部整ってないと、あとで地獄になる」――そんな空気が漂っている。\n";
+          break;
+        }
+        if(t===9){
+          out += "『Sea&Bunny』のレジ周り。\n";
+          out += "レジ周りの準備はだいたい片付いている。\n";
+          out += "陽夏は釣り銭トレーを一度閉じてから、もう一度だけ開けて金種の並びを見直した。\n";
+          out += "伝票の束は揃えられ、ペンも定位置に戻っている。\n";
+          out += "最後にレジロールの残量を確認して、深く息を吐いた。――あとは開店を待つだけだ。\n";
+          break;
+        }
+        if(t===10){
+          out += "『Sea&Bunny』のレジ周り。\n";
+          out += "開店して間もないのに、レジ前にはもう人が並びはじめている。\n";
+          out += "陽夏はテンポよく手を動かしながら、注文を聞いて、伝票に視線を落とす。\n";
+          out += "まだ大混雑ではない。けれど“回し始めた”空気がある。\n";
+          out += "レジ周りは、もう静かじゃない。\n";
+          break;
+        }
+        if(t===14){
+          out += "『Sea&Bunny』のレジ周り。\n";
+          out += "落ち着いた時間帯のはずなのに、客足は途切れない。\n";
+          out += "陽夏が合間合間に伝票をまとめている。\n";
+          break;
+        }
+        if(t===19){
+          out += "『Sea&Bunny』のレジ周り。\n";
+          out += "レジ前だけ、空気が忙しい。紙幣とレシートの擦れる音が、やけに大きく聞こえる。\n";
+          out += "陽夏が笑って会釈して、手を止めずに客の流れを捌いている。\n";
+          out += "『すみません、これ…！』――少し離れた場所から声が上がった。\n";
+          out += "陽夏は『少々お待ちください』とだけ言って、レジから一歩、二歩と離れる。\n";
+          out += "ほんの数秒。レジ前に、十分な“空白”が落ちた気がした。\n";
+          break;
+        }
+        if(t===20){
+          out += "『Sea&Bunny』のレジ周り。\n";
+          out += "陽夏がレジの前で、釣り銭トレーの中身を静かに並べ直している。\n";
+          out += "紙幣を一度広げて、指で揃え、数えては戻す。\n";
+          out += "視線だけは落ち着いてるのに、指先の動きが少しだけ早い。\n";
+          break;
+        }
+                if(t===22){
+          out += "『Sea&Bunny』のレジ周り。\n";
+          out += "客の波が少し引いて、空気がようやく“閉店前”の色に変わってきた。\n";
+          out += "陽夏は伝票の束を揃えて輪ゴムで留め、レジ下の引き出しを静かに閉める。\n";
+          out += "上着を手に取り、鍵やスマホをポケットに押し込んで、帰宅の準備をしている。\n";
+          out += "『お先っす』と言いかけて、こちらをちらっと見た。\n";
+          break;
+        }
+if(t===23){
+          out += "『Sea&Bunny』のレジ周り。\n";
+          out += "今ならレジ周りも落ち着いて見られそうだ。\n";
+          // 未読ならヒントだけ出す（読むのは「調べる」）
+          if(!state.flags || !state.flags.cashMemoRead){
+            out += "\nレジ台の隙間に、紙メモが挟まっている。\n";
+          }
+          break;
+        }
+        out += "『Sea&Bunny』のレジ周り。\n";
+        out += "人の気配は途切れず、会計の音が断続的に響く。\n";
+        break;
+      }
+
+      case 5: {
+  // 2F厨房前（時間帯テキスト確定：08 / 12 / 13 / 14 / 15 / 16 / 17 / 18 / 19 / 20 / 21 / 22 / 23）
+  if(t===8){
+    out += "厨房前。\n";
+    out += "厨房前には朝の冷たい空気と、洗剤の匂いがうっすら残っている。\n";
+    out += "茉陽はエプロンの紐を結び直し、作業台の上に食材を並べていった。\n";
+    out += "包丁の位置、ボウルの数、計量スプーン――手が迷わないように“仕込みの形”を作っている。\n";
+    out += "冷蔵庫を開けて中を一度見渡し、メモを確認してから、静かに息を吐いた。\n";
+    out += "まだ開店前。けれど厨房はもう、動き出している。\n";
+    break;
+  }
+  if(t===12){
+    out += "厨房前。\n";
+    out += "厨房から熱と匂いが押し出してくる。\n";
+    out += "茉陽はフライパンと鍋を行ったり来たりしながら、手を止めずに調理を回している。\n";
+    out += "短い指示が飛び、返事も短い。皿が置かれる音と、油のはぜる音が重なる。\n";
+    out += "ここにいるだけで、店が一番回っている時間だと分かった。\n";
+    break;
+  }
+  if(t===13){
+    out += "厨房前。\n";
+    out += "忙しさが少しだけ引いて、空いた手が補充と確認に回る。\n";
+    out += "少し離れたところで、茉陽の低い声が飛ぶ。\n";
+    out += "遅れて入ってきた七瀬が、身を縮めている。\n";
+    break;
+  }
+  if(t===14){
+    out += "厨房前。\n";
+    out += "落ち着いた時間のはずなのに、厨房はずっと手が動いている。\n";
+    out += "片付け、仕込み、補充——派手さはないのに、止まれない忙しさだ。\n";
+    break;
+  }
+  if(t===15){
+    out += "厨房前。\n";
+    out += "客の声は遠のいたのに、厨房の手は止まらない。\n";
+    out += "片付けと仕込みが交互に回り、静かな忙しさだけが残っている。\n";
+    out += "ここは、落ち着くほどに仕事が増える場所だ。\n";
+    out += "茉陽も手は動かしているが、今なら短くなら声をかけられそうだ。\n";
+    break;
+  }
+  if(t===16){
+    out += "厨房前。\n";
+    out += "厨房の動きが少しだけ速くなった。\n";
+    out += "夕方の波に向けて、仕込みが前倒しで進められている。\n";
+    out += "ボウルが並び、食材の袋が開けられ、次の段取りが組まれていく。\n";
+    out += "茉陽は買い出しに出たらしく、今は厨房に姿が見えない。\n";
+    out += "七瀬が作業台に立ち、手元の仕込みを黙々と進めていた。\n";
+    break;
+  }
+  if(t===17){
+    out += "厨房前。\n";
+    out += "廊下の方から足音がして、茉陽が両腕いっぱいに袋を抱えて戻ってくる。\n";
+    out += "冷蔵庫の扉が開いて、買ってきた食材が次々と収まっていく。\n";
+    out += "夕方の波に向けて、厨房がもう一段だけ“準備の速度”を上げた。\n";
+    break;
+  }
+  if(t===18){
+    out += "厨房前。\n";
+    out += "厨房の熱が一気に増して、空気が重たく感じる。\n";
+    out += "皿の置かれる音、油のはぜる音、短い指示が重なって止まらない。\n";
+    out += "茉陽と七瀬は視線を交わす暇もなく、手だけで段取りを繋いでいる。\n";
+    out += "ここにいるだけで、ピークに入ったと分かる。\n";
+    break;
+  }
+  if(t===19){
+    out += "厨房前。\n";
+    out += "ピークはまだ続いている。\n";
+    out += "出ていく皿の数に対して、戻ってくる空皿も多い。\n";
+    out += "厨房は作るだけじゃなく、回収と整理まで同時に回している。\n";
+    out += "いまは一瞬の遅れが、そのまま列になる。\n";
+    break;
+  }
+  if(t===20){
+    out += "厨房前。\n";
+    out += "厨房の忙しさに、酒のつまみや追加の小皿が混ざりはじめる。\n";
+    out += "仕事の種類が増えて、手が止まらないのは変わらない。\n";
+    out += "夜の店に切り替わっていく気配がある。\n";
+    break;
+  }
+  if(t===20){
+    out += "厨房前。\n";
+    out += "熱と音が少し落ちて、ようやく呼吸ができる。\n";
+    out += "その分、疲れがどっと顔を出す。\n";
+    out += "厨房は静かになったのに、手はまだ止まらない。\n";
+    out += "陽夏がレジ側から顔を出して、厨房の様子をうかがっている。\n";
+    break;
+  }
+  if(t===22){
+    out += "厨房前。\n";
+    out += "厨房の動きが少し落ち着き、片付けが目立ちはじめる。\n";
+    out += "茉陽は眠そうに目をこすりながら、最後の作業を手早く片付けている。\n";
+    out += "もうすぐ上がる気配があって、厨房の空気が少し軽くなった。\n";
+    break;
+  }
+  if(t===23){
+    out += "厨房前。\n";
+    out += "厨房は静かだ。静かすぎて、音の減り方が気になる。\n";
+    out += "片付けの水音だけが響き、空気が冷えていく。\n";
+    out += "何かが起きる前の、間みたいな時間だ。\n";
+    break;
+  }
+
+  out += "厨房前。\n";
+  out += "仕込みと片付けの気配が入り混じっている。\n";
+  break;
+}
+case 6:
+        // 2Fテラス
+        if(t===8){
+          out += "2Fテラス。\n";
+          out += "まだ静かで、椅子も整えられたままだ。\n";
+          out += "朝の空気が冷たく、手すりがひんやりする。\n";
+        } else if(t===9){
+          out += "2Fテラス。\n";
+          out += "テーブルの位置が整えられ、開店前の準備が進んでいる。\n";
+          out += "風が少しだけ強い。\n";
+          out += "手すりにもたれて、厳金が海を眺めている。\n";
+        } else if(t===10){
+          out += "2Fテラス。\n";
+          out += "開店して間もないのに、もう客が座りはじめている。\n";
+          out += "店のにぎわいが、少し遅れて上まで届く。\n";
+        } else if(t===11){
+          out += "2Fテラス。\n";
+          out += "日差しが増して、外の席が選ばれやすくなる時間だ。\n";
+          out += "料理を待つ気配が、ゆるく溜まっている。\n";
+        } else if(t===12){
+          out += "テラスは一気に埋まり、席の間を抜けるのも気を使う。\n";
+          out += "料理の匂いと湯気が外に逃げて、空気が甘く重い。\n";
+          out += "配膳のたびに椅子が軋み、会話が途切れない。\n";
+          out += "皿を置くたびに『すみません』と『ありがとう』が短く交差する。\n";
+        } else if(t===13){
+          out += "2Fテラス。\n";
+          out += "昼の山が少しだけ引いて、空き席が見えはじめる。\n";
+          out += "皿を下げる音が増える時間だ。\n";
+        } else if(t===14){
+          out += "2Fテラス。\n";
+          out += "テーブルの端で、参式が遅めの昼をとっている。\n";
+          out += "忙しくて食べそびれてしまったらしく、手早く口に運んでいる。\n";
+          out += "風が皿の匂いをさらって、店の中より少しだけ静かだ。\n";
+        } else if(t===15){
+          out += "日差しが傾いて、影がテーブルの上をゆっくり伸びる。\n";
+          out += "ここは気持ちいい。けれど、油断すると寒くなる。\n";
+          out += "テラスの端の“定位置”に、ぺろがいる。\n";
+          out += "夕方の客が来る前の、間みたいな時間だ。\n";
+        } else if(t===16){
+          out += "2Fテラス。\n";
+          out += "空気が少し冷えてきて、外に残る客が選別されていく。\n";
+          out += "夕方の気配が、ゆっくり近づく。\n";
+        } else if(t===17){
+          out += "2Fテラス。\n";
+          out += "手すりにもたれて、ぺろが煙草を吸っている。\n";
+          out += "灰が風にほどけて、海の方へ流れていく。\n";
+          out += "ここは夕方の客が増えはじめて、グラスの音が少しずつ増える時間だ。\n";
+          out += "手すりは——近くで見ると、わずかにぐらついている。\n";
+        } else if(t===18){
+          out += "2Fテラス。\n";
+          out += "料理と酒が同時に動き出して、賑わいが一段上がる。\n";
+          out += "外なのに、空気が熱い。\n";
+        } else if(t===19){
+          out += "2Fテラス。\n";
+          out += "忙しさが続き、席の回転が始まっている。\n";
+          out += "皿を下げて、次を通して、また運ぶ。\n";
+        } else if(t===20){
+          out += "2Fテラス。\n";
+          out += "小皿と酒の注文が増えて、往復が増える。\n";
+          out += "七瀬がテラス側を回している。\n";
+          out += "今は細かい忙しさが切れない。\n";
+        } else if(t===20){
+          out += "2Fテラス。\n";
+          out += "熱が少し落ちて、呼吸がしやすくなる。\n";
+          out += "それでも小皿の注文は、途切れない。\n";
+        } else if(t===21){
+          out += "テラスの席が少しずつ空いて、外の音が戻ってくる。\n";
+          out += "片付けの気配はあるのに、ここだけはまだ“終わり”になりきっていない。\n";
+          out += "風が通って、店の中より空気が軽い。\n";
+          out += "テラスの端の定位置に、誰かの気配がある。\n";
+        } else if(t===23){
+          out += "テラスはほとんど空で、風の音がはっきり聞こえる。\n";
+          out += "椅子が揃えられ、ライトの光が床を淡く照らしている。\n";
+          out += "何も起きていないのに、落ち着かない静けさがある。\n";
+          out += "店の中の音まで遠く感じて、時間だけが妙に目立った。\n";
+        } else {
+          out += "2Fテラス。\n";
+          out += "風が通り、店内のざわめきが少し遅れて届く。\n";
+        }
+        break;
+case 7:
+        if(at12){
+          out += "SEA&BUNNY // FIELD LOG\nLOOP: "+pad2(state.loop)+"\nTIME: 12:00\n\nSTATUS: DAYLOCKED\nCHECKPOINT: 23:59\nCONSOLE: UNAVAILABLE\n";
+        } else if(at18){
+          out += "MEMASSIST WARNING\n- retention unstable\n- fragments may surface\n";
+        } else if(at22){
+          const ok = (state.precheck1 && state.precheck2 && !!state.token);
+          if(ok){
+            out += "AUTH REQUIRED FOR CONSOLE ACCESS\nSESSION: "+state.token+" // VALID\n";
+          } else {
+            out += "端末は沈黙している。\n\nAUTH REQUIRED FOR CONSOLE ACCESS\n\n";
+          }
+        } else {
+          out += "端末は待機している。\n";
+        }
+        if(t===10){
+          out += "ぺろが端末の前で固まっている。\n" + "画面と手元を見比べて、困ったように唸った。\n";
+        }
+        if(t===20){
+          out += "ぺろが端末の前に張り付いて、画面を覗き込みながら指を動かしている。\n" + "キーを叩く音が、短く速い。\n" + "時々手を止めて、表示を確かめるみたいに画面を睨んでいる。\n";
+        }
+        break;
+    }
+
+    // subtle hint for EX stabilized
+    if(state.operatorBound && !state.perAlive){
+      out += "\n\n（ログが一瞬だけ揺らぐ）\nSTATUS: STABILIZED LOOP\n";
+    }
+
+    return out;
+  }
+
+
+  function ensureUnlock(ids){
+    if(!Array.isArray(ids)) ids = [ids];
+    let changed = false;
+    for(const id of ids){
+      if(!state.unlockedLocations.includes(id)){
+        state.unlockedLocations.push(id);
+        changed = true;
+      }
+    }
+    if(changed){
+      state.unlockedLocations.sort((a,b)=>a-b);
+    }
+    return changed;
+  }
+
+  function onEnterLocation(){
+    if(state.timeMode!=="HOUR") return;
+    // Unlock locations by progression
+    // Auto-observe via scene text is disabled (unlock/observe only via user input)
+// Locations are unlocked by discovering their names in text and typing them as commands.
+const t = state.hour;
+    const loc = state.location;
+
+    // Auto-collect logs at scheduled times/locations
+    if(t===10 && loc===1 && !state.inventory.log1){
+      state.inventory.log1 = true;
+      addLine("MEM", "記憶断片を捕捉。LOG①が残った。");
+      unlockDoc("log1");
+    }
+    if(t===16 && loc===6 && !state.inventory.log2){
+      state.inventory.log2 = true;
+      addLine("MEM", "記憶断片を捕捉。LOG②が残った。");
+      unlockDoc("log2");
+    }
+    if(t===13 && loc===5 && !state.inventory.log3){
+      state.inventory.log3 = true;
+      addLine("MEM", "記憶断片を捕捉。LOG③が残った。");
+      unlockDoc("log3");
+    }
+
+    // If LOG①②③ are all acquired, unlock Backyard
+    if(state.inventory.log1 && state.inventory.log2 && state.inventory.log3){ ensureUnlock([3]); }
+
+    // Flashback hint at 18:00 on loc 2
+    if(t===18 && loc===2){
+      addLine("MEM", "MEMASSIST: GLITCH (AUDIO FRAGMENT)\nKEYWORD: \"FALSE ALARM\"");
+    }
+
+    // Strong flashback at 18:00 on loc 6
+    if(t===18 && loc===6){
+      addLine("MEM", "MEMASSIST: FLASHBACK (HIGH)\nPHRASE: \"SIGN NATSUKI_KANA\"\nEMOTION: GUILT");
+    }
+  }
+
+  function normalizeCmd(s){
+    return (s||"").normalize("NFKC").trim().toUpperCase().replace(/\s+/g, "");
+  }
+
+  function doCommand(raw){
+    if(state.timeMode!=="HOUR") return;
+    const t = state.hour;
+    const loc = state.location;
+    const cmd = normalizeCmd(raw);
+    const cmdJP = normalizeJP(raw);
+
+    // phrase-only input support: allow typing a location name directly (no slash needed)
+    if(raw && !String(raw).includes("/")){
+      const phraseOnly = String(raw).trim();
+      const u = unlockPhrase(phraseOnly);
+      if(u){
+        if(!state.observedPhrases[u.phrase]){
+          // mark canonical + aliases as observed
+          state.observedPhrases[u.phrase] = true;
+          if(u.also && Array.isArray(u.also)){
+            for(const a of u.also){
+              if(a && !state.observedPhrases[a]) state.observedPhrases[a] = true;
+            }
+          }
+          addLine("OBSERVE", `PHRASE OBSERVED: ${u.phrase}`);
+        }
+        ensureUnlock(u.id);
+        state.location = u.id;
+        addLine("MOVE", `→ ${getLocName(u.id)} (unlock)`);
+        advanceHour();
+        render();
+        save();
+        return;
+      }
+    }
+
+    // All commands consume +1h (except empty)
+    if(!cmd && !cmdJP){
+      addLine("WARN", "コマンドが空です。");
+      return;
+    }
+
+    // Unlock locations by typing their name when it appears in the current scene text
+    const sceneNow = buildSceneText();
+    for(const u of UNLOCK_PHRASES){
+      const targets = [u.phrase, ...(u.also||[])].map(normalizeJP);
+      if(targets.includes(cmdJP) && ([u.phrase, ...(u.also||[])].some(p=>sceneNow.includes(p)))){
+        // If the phrase is visible right now, treat it as observed immediately.
+        if(!state.observedPhrases[u.phrase]){
+          // mark canonical + aliases as observed
+          state.observedPhrases[u.phrase] = true;
+          if(u.also && Array.isArray(u.also)){
+            for(const a of u.also){
+              if(a && !state.observedPhrases[a]) state.observedPhrases[a] = true;
+            }
+          }
+          addLine("OBSERVE", `PHRASE OBSERVED: ${u.phrase}`);
+        }
+        const newly = ensureUnlock([u.id]);
+        if(newly){
+          addLine("UNLOCK", `LOCATION UNLOCKED: ${u.phrase}`);
+        } else {
+          addLine("INFO", `LOCATION ALREADY UNLOCKED: ${u.phrase}`);
+        }
+        // Optionally move to that location immediately
+        state.location = u.id;
+        onEnterLocation();
+        advanceHour();
+        return;
+      }
+    }
+
+    // Commands
+
+    // 1F受付 07:00 特殊コマンド：アルバイト（新人アルバイト）
+    if(cmdJP === "アルバイト"){
+      // 条件外ではログを出さず時間だけ進める
+      if(!(loc===1 && t===7)) { advanceHour(); return; }
+      
+      addLine("TALK", `新人アルバイト「やあ。初めまして、DAYLOCKの開発者です。」
+新人アルバイト「よく僕の存在がわかりましたね。素晴らしいです！」
+新人アルバイト「とりわけ何かあるわけではありませんが、」
+新人アルバイト「新人アルバイトを見つけたって伝えてくれたら喜びますよ。」`);
+
+      advanceHour();
+      render();
+      save();
+      return;
+    }
+
+
+    // PRECHECK-01: 手袋（17:00 / 1F階段）
+    if(cmdJP === "手袋"){
+      // 場所と時間が一致しない場合は何も表示しない（ログを汚さない）
+      if(!(loc===2 && t===17)) { advanceHour(); return; }
+
+      if(!state.precheck1){
+        addLine("TALK", `華那「……手袋。」
+華那「俺はこの時間――片腕だけ、手袋をしていた。」
+華那「……なぜ片方だけだった？　思い出せ。」`);
+        state.precheck1 = true;
+        // unlock Kana PROFILE-02 when PRECHECK-01 is completed
+        if(!state.profiles) state.profiles = {};
+        state.profiles.kana = Math.max(state.profiles.kana||1, 2);
+        addLine("ACTION", `PRECHECK-01: COMPLETE\nSITE: 1F STAIR\nSTAMP: ${nowTimeLabel()}`);
+      } else {
+        addLine("INFO", "（その感覚は、もう押さえてある。）");
+      }
+      advanceHour();
+      return;
+    }
+
+    // PRECHECK-02: 盗む（19:00 / 2Fレジ周り）※PRECHECK-01 必須
+    if(cmdJP === "盗む"){
+      // 場所と時間が一致しない場合は何も表示しない（ログを汚さない）
+      if(!(loc===4 && t===19)) { advanceHour(); return; }
+
+      if(!state.precheck1){
+        addLine("DENY", "まだ早い。何かが足りない。");
+        advanceHour();
+        return;
+      }
+
+      if(!state.precheck2){
+        addLine("TALK", `華那「……盗む。」
+華那「──あの時の手つきが、やけに鮮明だ。」
+華那「レジの中身に触れたのは……金のためじゃない。」
+華那「ただ、あの装置がどう反応するかを確かめたかった。」
+華那「……安全だと、信じた。信じたかった。」`);
+        state.precheck2 = true;
+        // unlock Kana PROFILE-03 when PRECHECK-02 is completed
+        if(!state.profiles) state.profiles = {};
+        state.profiles.kana = Math.max(state.profiles.kana||1, 3);
+        addLine("ACTION", `PRECHECK-02: COMPLETE\nSITE: 2F REGISTER\nSTAMP: ${nowTimeLabel()}`);
+      } else {
+        addLine("INFO", "（もう一度やる必要はない。）");
+      }
+      advanceHour();
+      return;
+    }
+
+
+
+    if(cmd === "話す" || cmd === "はなす"){
+      if(state.timeMode!=="HOUR"){ addLine("DENY","今は会話できない。"); return; }
+
+      let didTalk = false;
+
+      // Location-specific TALK
+      if(loc===1){
+        // 1F受付
+        if(t===17){
+          if(!state.profiles) state.profiles = {};
+          const had = !!state.profiles.genkin;
+          if(!state.profiles.genkin) state.profiles.genkin = 1;
+          if(!had) addLine("UNLOCK","PROFILE UNLOCKED: 曄月 厳金");
+          addLine("TALK", `厳金「お前、この時間に階段前でなんかコソコソやってたよな？」
+厳金「まぁいいけどさ！そのめんどくせー癖、なおせないのか？」
+厳金「片方だけって、もったいねーだろ(笑)」`);
+          didTalk = true;
+        }
+        if(t===20){
+          if(!state.profiles) state.profiles = {};
+          const had = !!state.profiles.genkin;
+          if(!state.profiles.genkin) state.profiles.genkin = 1;
+          if(!had) addLine("UNLOCK","PROFILE UNLOCKED: 曄月 厳金");
+          addLine("TALK", `厳金「あっれ～。おかしいな。さっきまであったキャビネットの鍵をどっかに落としちまったみてーだ。」
+厳金「勝手にどっかいくなんてどういう教育うけてんだか！」`);
+          didTalk = true;
+        }
+      }
+
+      // Location-specific TALK
+      if(loc===2){
+        // 1F階段
+        if(t===9){
+          addLine("TALK", `野月「あぁ～。華那さんじゃないっすか。」
+野月「ちょっとそこまで行ってきますわぁ～。」`);
+          didTalk = true;
+        }
+        if(t===15){
+          addLine("TALK", `ぺろ「おぉ、華那じゃーん。さぼって、なにしてんの？」
+ぺろ「……まあ、いいけど。こんなとこで立ち止まってたら、人にぶつかるぞー」
+ぺろ「俺さ、レース当日のイベントメニューが決まんなくて困ってんだよねぇー」
+ぺろ「明日本番なのにな！」
+（ぺろさんは豪快に笑っている。）`);
+          // Unlock Péro profile Lv1 (only)
+          if(!state.profiles) state.profiles = {};
+          const had = (state.profiles.pero||0) >= 1;
+          if((state.profiles.pero||0) < 1) state.profiles.pero = 1;
+          if(!had) addLine("UNLOCK","PROFILE UNLOCKED: 望月 ぺろ");
+          didTalk = true;
+        }
+        if(t===16){
+          addLine("TALK", `茉陽「お、華那さんやん。こんなとこで何してるん？」
+茉陽「うち、ちょっと下行ってくるだけ〜。上、なんやかんやバタついててさ」
+茉陽「……あ、あとで時間あったら、なんか甘いの食べてって。気分変わるで」`);
+          didTalk = true;
+          if(!state.profiles) state.profiles = {};
+          const hadM = (state.profiles.mahin||0) >= 1;
+          if((state.profiles.mahin||0) < 1) state.profiles.mahin = 1;
+          if(!hadM) addLine("UNLOCK","PROFILE UNLOCKED: 彩月 茉陽");
+        }
+        if(t===17){
+          addLine("TALK", `茉陽「なぁ華那さん、男の子やったらさ」
+茉陽「女の子がこんだけ荷物持ってたら、どうするん？」
+茉陽「……言わんくても、手伝ってやー。ほら、こっちの袋でもええから！」`);
+          didTalk = true;
+        }
+        if(t===19){
+          addLine("TALK", `七瀬「ちょ、ちょっと待って！」
+七瀬「今はマジであかん、手ぇ足りてへん！」
+七瀬「レジにいる陽夏に聞いてくれ！」
+七瀬「あとで！落ち着いたらな！」`);
+          didTalk = true;
+        }
+        if(t===22){
+          addLine("TALK", `茉陽「もー、今日も疲れたわぁ……」
+茉陽「あたし、眠たくてかなわん」
+茉陽「帰ったら、秒で寝る。ほんまに」`);
+          didTalk = true;
+        }
+      }
+
+      
+      // Location-specific TALK
+      if(loc===3){
+        // 1Fバックヤード
+        if(t===9){
+          if(!state.profiles) state.profiles = {};
+          const had = !!state.profiles.nagisa;
+          if(!state.profiles.nagisa) state.profiles.nagisa = 1;
+          if(!had) addLine("UNLOCK","PROFILE UNLOCKED: 老月 凪紗");
+          addLine("TALK", `凪紗「華那。この前、壁の端末触ってなかった？」
+凪紗「あんまり備品に触らないでね」`);
+          didTalk = true;
+        }
+        if(t===12){
+          if(!state.profiles) state.profiles = {};
+          const had = !!state.profiles.nagisa;
+          if(!state.profiles.nagisa) state.profiles.nagisa = 1;
+          if(!had) addLine("UNLOCK","PROFILE UNLOCKED: 老月 凪紗");
+          addLine("TALK", `凪紗「華那。また手袋使ったでしょ。」
+凪紗「在庫が合わなくなるからやめてって言ったじゃん。」
+凪紗「使うなら買ってあげるから、お店のは使わないで。」`);
+          didTalk = true;
+        }
+        if(t===17){
+          if(!state.profiles) state.profiles = {};
+          const prev = state.profiles.nagisa || 0;
+          if(prev < 2){
+            state.profiles.nagisa = 2;
+            addLine("UNLOCK","PROFILE UPDATED: 遥月 凪紗 (02)");
+          }
+          addLine("TALK", `凪紗「はぁ・・・。ほんっと頭痛い・・・。」
+凪紗「なんでわかってくんないかなー。」
+凪紗「なんも考えたくねー。」`);
+          didTalk = true;
+        }
+
+        if(t===20){
+          if(!state.profiles) state.profiles = {};
+          const had = !!state.profiles.genkin;
+          if(!state.profiles.genkin) state.profiles.genkin = 1;
+          if(!had) addLine("UNLOCK","PROFILE UNLOCKED: 曄月 厳金");
+          addLine("TALK", `厳金「お、華那じゃん。何してんの？」
+厳金「俺は暇してるよ！なんかするか？なんかしようぜ！」`);
+          didTalk = true;
+        }
+        if(t===20){
+          if(!state.profiles) state.profiles = {};
+          const had = !!state.profiles.nagisa;
+          if(!state.profiles.nagisa) state.profiles.nagisa = 1;
+          if(!had) addLine("UNLOCK","PROFILE UNLOCKED: 老月 凪紗");
+          addLine("TALK", `凪紗「もう今日の仕事は終わったよ。あとは締め作業だけ。」
+凪紗「あ、そうだ、レースの問題考えたから問いてみてよ。」
+凪紗「北の言葉で私は boulenc。」
+凪紗「でも都の言葉では、語尾が変わる。」
+凪紗「店ではなく、そこで働く“職人”の名を答えよ」`);
+          didTalk = true;
+        }
+      }
+      if(loc===4){
+        // 2F レジ周り（陽夏）
+        if(t===8){
+          addLine("TALK", `陽夏「お、華那さん。早いっすね」
+陽夏「レジ？　釣り銭、開店前にちゃんと用意しとかないと落ち着かなくて」
+陽夏「今日は……まあ、普通に忙しくなりそうっす。昼の波、えぐいんでぇ」`);
+          didTalk = true;
+          if(!state.profiles) state.profiles = {};
+          const hadY1 = (state.profiles.youka||0) >= 1;
+          if((state.profiles.youka||0) < 1) state.profiles.youka = 1;
+          if(!hadY1) addLine("UNLOCK","PROFILE UPDATED: 葉月 陽夏 Lv1");
+        }
+        if(t===9){
+          addLine("TALK", `陽夏「……あれ、華那さんって今日休みじゃないっすかぁ？」
+陽夏「いや、シフト表で見た気がしたんすけど……俺の見間違い？」
+陽夏「まあ来てくれて助かるっす。今、最終チェックしてるとこなんで」`);
+          didTalk = true;
+        }
+        if(t===10){
+          addLine("TALK", `陽夏「華那さん、ちょい頼んでいいっすか」
+陽夏「開店してすぐ客来てて、たぶん食材、想定より減るかもなんすよ」
+陽夏「厨房前行って、茉陽さんに『足りなくなるかも』って伝えてほしいっす」`);
+          didTalk = true;
+        }
+        if(t===14){
+          addLine("TALK", `陽夏「お、華那さん」
+陽夏「今、伝票まとめてるっす。昼のぶん、溜まると一気に地獄なんで」
+陽夏「数字ズレると後でずっと引きずるんで、先に潰しとく感じっす」`);
+          didTalk = true;
+        }
+        if(t===20){
+          addLine("TALK", `陽夏「あれぇ、レジの釣銭が減ってる気が・・・。」
+陽夏「かなさんってぇ、さっきレジ周りにいましたよねぇ」
+陽夏「何か・・・。でもぉ、かなさんが、そんなことするわけないっすよね。」`);
+          didTalk = true;
+          if(!state.profiles) state.profiles = {};
+          const hadY2 = (state.profiles.youka||0) >= 2;
+          if((state.profiles.youka||0) < 2) state.profiles.youka = 2;
+          if(!hadY2) addLine("UNLOCK","PROFILE UPDATED: 葉月 陽夏 Lv2");
+        }
+        if(t===22){
+          addLine("TALK", `陽夏「お疲れ様っす。自分ももうあがるんでぇ。」
+陽夏「華那さんも、あんまり遅くなっちゃだめっすよ。」`);
+          didTalk = true;
+          if(!state.profiles) state.profiles = {};
+          const hadY3 = (state.profiles.youka||0) >= 3;
+          if((state.profiles.youka||0) < 3) state.profiles.youka = 3;
+          if(!hadY3) addLine("UNLOCK","PROFILE UPDATED: 葉月 陽夏 Lv3");
+        }
+
+
+        if(!didTalk){
+          /* DENYログ非表示: 今は話しかける余裕がなさそうだ。 */
+          didTalk = true;
+        }
+      }
+
+      if(loc===6){
+        // 2Fテラス
+        if(t===9){
+          
+          if(!state.profiles) state.profiles = {};
+          const had = !!state.profiles.genkin;
+          if(!state.profiles.genkin) state.profiles.genkin = 1;
+          if(!had) addLine("UNLOCK","PROFILE UNLOCKED: 曄月 厳金");
+          addLine("TALK", `厳金「俺、ここから見る海なんかすきなんだよなぁ」
+厳金「今日はサプライズするからさ！華那、覚悟しとけよなぁ！」
+厳金「早速、バックヤードで準備するわ！」`);
+          didTalk = true;
+        }
+                if(t===12){
+          addLine("TALK", `野月「さっき、茉陽さんに怒られましたわぁ。」
+野月「どこほっつきあるいてんって。。。」`);
+          didTalk = true;
+        }
+if(t===14){
+          addLine("TALK", `参式「遅めのお昼とってます。」
+参式「忙しくて食べそびれてしまいました。」
+参式「……落ち着いたら、また手伝います。今だけ少し、すみません」`);
+          didTalk = true;
+        }
+                if(t===15){
+          addLine("TALK", `ぺろ「お、華那。こっち来たんだ」
+ぺろ「ここ、風がちょうどよくてさ。考えごとするには悪くないんだよね」
+ぺろ「――華那、安全装置のこと、お前しか頼めないんだ。任せたぞ」`);
+          didTalk = true;
+        }
+        if(t===17){
+          addLine("TALK", `ぺろ「ここの手すり。ぐらついてんだよなぁ。」
+ぺろ「陽夏にも言われちまったよ。まぁでも俺がいたら他に寄り付かないだろ！」
+ぺろ「……あれもあることだしな・・・。」`);
+          didTalk = true;
+        }
+        if(t===20){
+          addLine("TALK", `七瀬「今、テラスも細かい注文が続いてる」
+七瀬「悪い、長くは話せない」`);
+          didTalk = true;
+        }
+        if(t===21){
+          addLine("TALK", `ぺろ「はぁ〜……やっぱ仕事終わりは、ここで一服するのが最高にいいんだよな」
+ぺろ「中の空気と違ってさ、頭がスッとする」
+ぺろ「大事な書類をさっきキャビネットにしまったから、必要ならまた見といてな」
+ぺろ「今日もおつかれ。……華那も、無理すんなよ」`);
+
+          // Unlock Péro profile Lv2 (talk at 21:00 on 2Fテラス)
+          if(!state.profiles) state.profiles = {};
+          const had = (state.profiles.pero||0) >= 2;
+          if((state.profiles.pero||0) < 2) state.profiles.pero = 2;
+          if(!had) addLine("UNLOCK","PROFILE UNLOCKED: 望月 ぺろ (02)");
+
+          didTalk = true;
+        }
+        didTalk = true;
+      }
+
+
+            if(loc===5){
+        // 2F 厨房前（茉陽／七瀬／陽夏）
+        if(t===8){
+          addLine("TALK", `茉陽「お、華那さん。早いなぁ」
+茉陽「今、仕込み入る前の準備してんねん。道具とか食材とか、先に並べとくやつ」
+茉陽「開店してからやと、落ち着いて揃える時間なくなるやろ？」`);
+          didTalk = true;
+        }
+        if(t===11){
+          addLine("TALK", `茉陽「このままやと、買い出し行かんと足らんくなりそうやわ」
+茉陽「陽夏も“足らんくなりそう”言うてたしなぁ」
+茉陽「昼の波くる前に、いっぺん在庫だけ見とこか」`);
+          didTalk = true;
+        }
+        if(t===12){
+          addLine("TALK", `茉陽「あ〜、めっちゃ忙し〜！」
+茉陽「華那さん、いける！？」
+茉陽「テラスに食事はこんで！」`);
+          didTalk = true;
+        }
+        if(t===13){
+          addLine("TALK", `七瀬「……っ、華那さん」
+七瀬「ごめん、今ちょっと……あとで、ね」`);
+          if(!state.profiles) state.profiles = {};
+          const hadN = (state.profiles.nanase||0) >= 1;
+          if((state.profiles.nanase||0) < 1) state.profiles.nanase = 1;
+          if(!hadN) addLine("UNLOCK","PROFILE UNLOCKED: 嘘月 七瀬");
+          didTalk = true;
+        }
+        if(t===14){
+          addLine("TALK", `七瀬「……さっきのアレ、寝坊なんだ」
+七瀬「目が覚めた瞬間、終わったって思った」
+七瀬「まあ、取り返すしかないよな」`);
+          didTalk = true;
+        }
+        if(t===15){
+          addLine("TALK", `茉陽「今が一番しんどいかも」
+茉陽「ピーク中は勢いでいけるけど、落ち着くとやること見えるやん？」
+茉陽「見えた分だけ増えるの、ずるいわ〜」`);
+          didTalk = true;
+        }
+        if(t===16){
+          addLine("TALK", `七瀬「茉陽さん、買い出しに出たよ」
+七瀬「夕方のぶん、先に仕込み進めとくって」
+七瀬「……今、手は止められないけど。用事ある？」`);
+          didTalk = true;
+        }
+        if(t===17){
+          addLine("TALK", `茉陽「ただいま〜。買い出し、ギリ間に合ったわ」
+茉陽「これ入れたら、夕方の波も回せるはずやねん」
+茉陽「華那さん、手ぇ空いてたら袋ひとつだけ運んでくれへん？」`);
+          didTalk = true;
+        }
+        if(t===20){
+          addLine("TALK", `茉陽「はぁ……つかれた〜〜〜」
+茉陽「でもここから、つまみ系が増えるねん。地味にきっついわぁ」
+茉陽「華那さん、通るだけでもええから、邪魔だけせんといてな」`);
+          didTalk = true;
+        }
+        if(t===20){
+          addLine("TALK", `陽夏「……ふぅ。やっと一段落っすね」
+陽夏「レジのほうは落ち着いてきたけど、つまみの注文が地味に続いてます」`);
+          didTalk = true;
+        }
+        if(t===22){
+          addLine("TALK", `茉陽「も〜、眠たくてかなわん……」
+茉陽「あとちょい片付けたら、あたし上がるわ」
+茉陽「華那さん、残るなら無理せんといてな」`);
+          didTalk = true;
+        }
+
+        /* DENYログ非表示: 今は話しかける余裕がなさそうだ。 */
+        didTalk = true;
+      }
+
+// 11:00 — Sanshiki (Sea&Beluga mechanic)
+      if( loc===1 && t===11){
+        if(!state.talkProgress) state.talkProgress = {};
+        const seq = state.talkProgress.sanshiki || 0;
+        if(seq===0){
+          addLine("TALK", `参式「……華那さん。久しぶりです。」
+参式「えーと、朝の点検、終わったんで報告しに来たところです。」
+参式「開店前って静かで、落ち着きますよね。……まあ、落ち着いてる場合じゃないか。」
+参式「何か探してます？　分かる範囲なら答えます。」`);
+          if(!state.profiles) state.profiles = {};
+          if(!state.profiles.sanshiki) state.profiles.sanshiki = 1;
+          addLine("UNLOCK","PROFILE UNLOCKED: 老月 参式");
+          state.talkProgress.sanshiki = 1;
+          didTalk = true;
+        }
+        if(seq===1){
+          addLine("TALK", `参式「点検は毎日、同じ順番でやってます。」
+参式「順番が違うと、見落とすことがあるんですよね。変な話ですけど。」
+参式「……華那さん、いま何時です？　11時。了解です。」
+参式「時計ってズレることありますよね。15分とか。」
+参式「あー、入力がズレると技が出ない、みたいな。格ゲーの話です。」
+参式「昨日ちょっとやりすぎて寝不足で。目のピントが、たまに遅れます。」
+参式「肩が凝るので整体に通ってます。最近は手首も痛くなってきて。」
+参式「整備もゲームも、同じ動きが多いんで。」
+参式「でも点検は手順で補正できます。手順は裏切らないです。」`);
+          state.talkProgress.sanshiki = 2;
+          didTalk = true;
+        }
+}
+
+
+      // 16:00 — Sanshiki（受付カウンター）
+      if(loc===1 && t===16){
+        addLine("TALK", `参式「ぺろさんが大事な書類はここにしまってあるって言ってたんですよね～。」
+参式「自分にはわからんっすけど。」`);
+        didTalk = true;
+      }
+
+      // Morning window: 09-10 (Nagisa)
+      if(loc===1 && t===8){
+        if(!state.flags) state.flags = {};
+        if(state.flags.talk_staff_morning){
+          didTalk = true;
+        } else {
+          state.flags.talk_staff_morning = true;
+          // unlock Nagisa profile (persists across loops)
+          if(!state.profiles) state.profiles = {};
+          const had = !!state.profiles.nagisa;
+          if(!state.profiles.nagisa) state.profiles.nagisa = 1;
+          if(!had) addLine("UNLOCK","PROFILE UNLOCKED: 遥月 凪紗");
+          addLine("TALK", `凪紗「……おはよ。ごめん、今ほんと無理。」
+凪紗「今日はレース開催日で、こっちも段取りが詰まってるの。」
+凪紗「華那の相手してる余裕ない。必要なら、見えるとこだけ見て、邪魔しないで。」
+（凪紗は端末を一瞥して、すぐ作業に戻った）`);
+          didTalk = true;
+        }
+      }
+
+      if(loc===7){
+        // 1F端末
+        if(t===8){
+          addLine("TALK", `野月「かなさん、そいやーさっき、受付に新しいアルバイトの人きてましたよ。」`);
+          didTalk = true;
+        }
+
+        if(t===10){
+          addLine("TALK", `ぺろ「かな、自分のID覚えてるか？」
+ぺろ「俺はわすれた！どっかに書いてあったとおもったけどな～。」
+ぺろ「なんか合わせないとダメだっけか・・・。」`);
+          // ensure profile
+          if(!state.profiles) state.profiles = {};
+          const had = !!state.profiles.pero;
+          if(!state.profiles.pero) state.profiles.pero = 1;
+          if(!had) addLine("UNLOCK","PROFILE UNLOCKED: 望月 ぺろ");
+          didTalk = true;
+        }
+        if(t===20){
+          addLine("TALK", `ぺろ「華那じゃーん。お前、横文字やめろよな。読めねーんだよ。」
+ぺろ「男はだまって日本語使えよな～。」`);
+          // ensure profile
+          if(!state.profiles) state.profiles = {};
+          const had = !!state.profiles.pero;
+          if(!state.profiles.pero) state.profiles.pero = 1;
+          if(!had) addLine("UNLOCK","PROFILE UNLOCKED: 望月 ぺろ");
+          didTalk = true;
+        }
+      }
+
+      // Always consume +1h for TALK
+      advanceHour();
+      return;
+    }
+// LOG acquisition by discovered phrases
+    if(cmd === "レジの下" || cmd === "レジ下" || cmd === "レジのした"){
+      const key = "レジの下";
+      if(!state.observedPhrases[key]){
+        addLine("DENY", "その場所の手掛かりをまだ見ていない。");
+        advanceHour();
+        return;
+      }
+      if(!(loc===1 && t===7)){
+
+        addLine("DENY", "今はそこを探れない。");
+        advanceHour();
+        return;
+      }
+      if(state.inventory.log1){
+        advanceHour();
+        return;
+      }
+      state.inventory.log1 = true;
+      addLine("MEM", "記憶断片を捕捉。LOG①が残った。");
+      unlockDoc("log1");
+      advanceHour();
+      return;
+    }
+
+    
+
+    // Cabinet: open (unlock DAYLOCK manual)
+    if(cmd === "OPEN_CABINET" || cmdJP === "キャビネット" || cmdJP === "キャビネットを開ける" || cmdJP === "キャビネット開ける" || (cmdJP === "開ける" && loc===1)){
+      // Already obtained
+      if(isDocUnlocked("daylock_manual")){
+        addLine("INFO", "キャビネットの中はもう空だ。");
+        advanceHour();
+        return;
+      }
+
+      // Only valid at Reception 22:00
+      if(loc===1 && t===22){
+        if(state.inventory && state.inventory.cabinetKey){
+          addLine("GET", "キャビネットを開けた。DAYLOCK 取扱手順書を入手した。");
+          unlockDoc("daylock_manual");
+          // Show in Docs tab immediately
+          /* Docs are opened via modal; no auto-switch. */
+        }else{
+          addLine("DENY", "鍵がない。");
+        }
+        advanceHour();
+        return;
+      }
+
+      // Outside the valid time/location: stay silent, but time advances
+      advanceHour();
+      return;
+    }
+
+// Cabinet: key retrieval (persistent)
+    if(cmd === "TAKE_CABINET_KEY" || cmdJP === "キャビネット鍵" || cmdJP === "キャビネットの鍵" || cmdJP === "キャビネット鍵を取る" || cmdJP === "鍵を取る"){
+      // 既に拾っている場合は、場所や時間に関係なく「何もない」扱い
+      if(state.inventory.cabinetKey){
+        // already picked up; stay silent
+        advanceHour();
+        return;
+      }
+
+      // 取得は「バックヤード」かつ 21:00 のみ
+      const locName = getLocName(loc);
+      const isBackyardLike = (loc===3) || (typeof locName === "string" && locName.includes("バックヤード"));
+      if(isBackyardLike && t===21){
+        state.inventory.cabinetKey = true;
+        addLine("GET", "キャビネット鍵を拾った。");
+        advanceHour();
+        return;
+      }
+
+      // 条件外：ログは出さずに時間だけ進める
+      advanceHour();
+      return;
+    }
+
+
+    
+// Investigate
+if(cmdJP === "調べる" || cmdJP === "しらべる" || cmdJP === "調査" || cmd === "INVESTIGATE"){
+  // 1F階段：厳金イベント（14:00／調べる）
+  if(loc===2 && t===14){
+    if(!state.flags) state.flags = {};
+    if(!state.flags.genkinSeen){
+      state.flags.genkinSeen = true;
+      if(!state.profiles) state.profiles = {};
+      const had = !!state.profiles.genkin;
+      if(!state.profiles.genkin) state.profiles.genkin = 1;
+      if(!had) addLine("UNLOCK","PROFILE UNLOCKED: 曄月 厳金");
+      addLine("TALK", `厳金「――っしゃあ！！」
+厳金「華那！！　驚いたか！？」
+厳金「おれだよ、おれ！　厳金（げんきん）！！」
+
+（着ぐるみの頭が、ぐらっと持ち上がる。中から声が響く）
+
+厳金「いや〜、朝から置いといたら絶対ビビると思ってさ！」
+厳金「……おい、固まんな固まんな！　冗談冗談！」
+厳金「ほら、見た目はアレだけど中身はちゃんと人間だって！」`);
+    } else {
+      addLine("TALK", "（さっきの着ぐるみは、もう動かない。……悪い冗談みたいだ。）");
+    }
+    advanceHour();
+    return;
+  }
+
+  // 1Fバックヤード：シフト表（11:00／調べる）
+  if(loc===3 && t===11){
+    // 初回以降も何度でも見られる
+    if(!state.flags) state.flags = {};
+    state.flags.shiftSeen = true;
+    // unlock Docs: シフト表（本日）
+    if(!isDocUnlocked("shift_today")){
+      unlockDoc("shift_today");
+      addLine("UNLOCK", "DOC UNLOCKED: シフト表（本日）");
+    }
+    addLine("INFO", "壁にシフト表が貼ってある。");
+    addLine("TALK", `（シフト表）
+那月華那：本日／休み
+
+（付箋）
+「呼ばれたら適度に対応。
+記録を残すときは、最後にサイン」`);
+    advanceHour();
+    return;
+  }
+
+
+
+  addLine("DENY", "今は調べるべきものがない。");
+  advanceHour();
+  return;
+}
+
+
+// QUIZ ANSWER: ブーランジェ（22:00 / 1Fバックヤード）
+if(cmdJP === "ブーランジェ"){
+  // 条件外はログを出さず、時間だけ進める
+  if(loc===3 && t===22){
+    addLine("TALK", `凪紗「正解！ちょっと難しかったかな。」
+凪紗「そういえば...華那。最近隠し事してない？」
+凪紗「クビになったことも、私は何かわけがあったんだと思ってる。」
+凪紗「なんでも相談してね。じゃ、おやすみ。」`);
+  }
+  advanceHour();
+  return;
+}
+
+if(cmd === "CHECK"){
+      // prerequisite step before SIGN: gathers missing log index and refreshes auth cache
+      state.checkDone = true;
+
+      const have1 = !!state.inventory.log1;
+      const have2 = !!state.inventory.log2;
+      const have3 = !!state.inventory.log3;
+      const missing = [];
+      if(!have1) missing.push("LOG-①");
+      if(!have2) missing.push("LOG-②");
+      if(!have3) missing.push("LOG-③");
+      const missingStr = (missing.length ? missing.join(", ") : "NO");
+
+      if(loc===7 && (t===21 || t===22)){
+        // issue / refresh token if all fragments are present
+        if(have1 && have2 && have3){
+          if(!state.token) state.token = "SB-23-59-7F2A";
+          // unlock Kana memory note when CHECK is OK
+          unlockDoc("kana_memory");
+          // Unlock Péro profile Lv3 when CHECK is OK
+          if(!state.profiles) state.profiles = {};
+          const hadPero3 = (state.profiles.pero||0) >= 3;
+          if((state.profiles.pero||0) < 3) state.profiles.pero = 3;
+          if(!hadPero3) addLine("UNLOCK","PROFILE UNLOCKED: 望月 ぺろ (03)");
+          addLine("CHECK", "MISSING: "+missingStr+"\nAUTH CACHE: READY\nSESSION TOKEN: "+state.token+"\nEXPIRY: 23:59");
+        } else {
+          addLine("CHECK", "MISSING: "+missingStr+"\nAUTH CACHE: NOT READY\nnote: 欠けている断片は後回し（スルー）でも良いが、SIGN 前に CHECK は必須。");
+        }
+      } else {
+        // outside terminal window: still counts as CHECK (for manual), but provides minimal output
+        addLine("CHECK", "MISSING: "+missingStr);
+      }
+      advanceHour();
+      return;
+    }
+
+    if(cmd === "SIGNNATSUKI_KANA" || cmd === "SIGNNATSUKIKANA"){
+      const ok = (loc===7 && t===22 && state.checkDone && state.precheck1 && state.precheck2 && !!state.token);
+      if(ok){
+        state.auth = true;
+        state.consoleGranted = true;
+        addLine("AUTH", "AUTH: VERIFIED\nCONSOLE ACCESS: GRANTED");
+        // Docs: cache terminal output once authentication is verified
+        try{ unlockDoc('terminal_cache'); }catch(e){}
+
+        // show console immediately after successful SIGN (commands still state-gated)
+        try{ openConsole(); }catch(e){}
+
+      } else if(loc===7 && t===22 && !state.checkDone){
+        addLine("DENY", "SIGN は CHECK 完了後に受け付けます。まず CHECK を実行してください。");
+      } else if(loc===7 && t===22){
+        addLine("DENY", "SIGN 失敗。");
+      } else {
+        addLine("DENY", "SIGN は 22:00 の『壁の端末』でのみ有効。");
+      }
+      // SIGN does not advance time (time is held on authentication)
+      return;
+    }
+
+    // fallback
+    addLine("DENY", "未定義コマンド: "+cmd);
+    advanceHour();
+  }
+
+  function advanceHour(){
+    if(state.timeMode!=="HOUR") return;
+
+    // from 23:00 -> checkpoint (23:59)
+    if(state.hour === 23){
+      state.timeMode = "CHECKPOINT";
+      state.status = "CHECKPOINT";      setClockDisplay(true);
+addLine("SYSTEM", "CHECKPOINT 23:59: INIT");
+      evaluateCheckpoint();
+      return;
+    }
+
+    // normal hour advance
+    state.hour += 1;
+    if(state.hour>23) state.hour = 23;      setClockDisplay(true);
+addLine("TIME", "ADVANCE -> "+nowTimeLabel());
+    onEnterLocation(); // allow auto-collect on arriving time
+  }
+
+  function evaluateCheckpoint(){
+    // If fail -> revert immediately
+    const pass = state.consoleGranted && state.auth && state.precheck1 && state.precheck2 && !!state.token;
+    if(!pass){
+      addLine("CHECK", "CHECKPOINT 23:59: FAIL\nCONSOLE ACCESS: DENIED\nFAILSAFE: REVERT");
+      revertLoop();
+      return;
+    }
+    addLine("CHECK", "CHECKPOINT 23:59: PASS\nFAILSAFE: BYPASSED\nCONSOLE: READY");
+    // If console is not open at checkpoint, do NOT auto-open. Treat as no-resolution and revert.
+    try{
+      const overlay = document.getElementById("overlay");
+      if(overlay && !overlay.classList.contains("show")){
+        addLine("CHECK", "CHECKPOINT 23:59: NO RESOLUTION\nCONSOLE: CLOSED\nFAILSAFE: REVERT");
+        revertLoop();
+        return;
+      }
+    }catch(e){}
+  }
+
+  function revertLoop(){
+    playBlackoutOverlay().then(()=>{
+      // reset per-loop state, keep inventory & lines
+      state.timeMode = "HOUR";
+      state.hour = 7;
+      state.location = 1; // back to reception counter
+      addLine("REVERT", "ROLLBACK -> 07:00\nLOOP: "+pad2(state.loop));
+      state.status = state.operatorBound ? "STABILIZED" : "DAYLOCKED";
+      setClockDisplay(true);
+
+      state.precheck1 = false;
+      state.precheck2 = false;
+      state.token = null;
+      state.auth = false;
+      state.consoleGranted = false;
+
+      // reset conversation flags (NPC talks reset each loop)
+      if(!state.flags) state.flags = {};
+      state.flags.talk_staff_morning = false;
+      state.flags.talk_staff_afternoon = false;
+      state.flags.talk_mitsuki_15 = false;
+      state.flags.talk_mitsuki_16 = false;
+
+      // reset per-loop talk progress (profiles persist)
+      state.talkProgress = {};
+
+
+      // advance loop number BEFORE reboot popup (the screen already "looped")
+      state.loop += 1;
+      state.loopCount = state.loop;
+      if(state.loop === 2){ try{ unlockDoc('mem_missing_index'); }catch(e){} }
+
+
+      // sync header clock between code and cinematic
+      
+      // show 07:00 + scene immediately (no minute tween)
+      setClockDisplay(false);
+      render();
+      return new Promise(r=>setTimeout(r, 260)).then(()=>playCountdownOverlay("post"));
+    }).then(()=>{
+            save();
+      render();
+    });
+  }
+
+  function openConsole(){
+    const overlay = document.getElementById("overlay");
+    overlay.classList.add("show");
+    const termOut = document.getElementById("termOut");
+    const warning = `WARNING:
+- COMMIT finalizes incident & liability
+- ROLLBACK restores prior state (non-final)
+`;
+    termOut.innerHTML = "";
+    termReset();
+    const lines = [
+      "DAYLOCK CONSOLE // SEA&BUNNY",
+      "OPERATOR: NATSUKI KANA",
+      "SYNC: ███░░░░░░░ (FAIL)",
+      "MEMORY ASSIST: CORRUPT // 0x00??",
+      "",
+      "INCIDENT: FATAL (PERO) // PENDI▒G",
+      "LIABILITY: OPERATOR_DECISION // PENDING",
+      "TRACE: --- LOST ---",
+      "",
+      warning,
+      "TYPE COMMAND",
+      ""
+    ];
+    termAppend(lines, {speed:18, lineDelay:30});
+    document.getElementById("termIn").value = "";
+    document.getElementById("termIn").focus();
+  }
+
+
+
+window.backToConsole22 = function backToConsole22(){
+  // Return to 22:00 terminal after reaching 24:00 (ENDED)
+  state.timeMode = "HOUR";
+  state.hour = 22;
+  state.checkpoint = false;
+  // keep auth/prechecks/token as-is so 23:59 checkpoint can be reached again
+  state.ended = null;
+  state.status = "DAYLOCKED";
+  state.location = 7; // terminal
+  if(!state.unlockedLocations.includes(7)) state.unlockedLocations.push(7);
+  setClockDisplay(true);
+  render();
+  openConsole();
+  try{ document.getElementById("termIn")?.focus(); }catch(e){}
+};
+
+  function closeConsole(){
+    document.getElementById("overlay").classList.remove("show");
+  }
+
+    // terminal interactive state (y/N prompts)
+  let termPending = null; // {type:"commit"|"stabilize"|"rollback_to_stabilize"|"ex_rollback"}
+  let termLocked = false;
+
+  // Terminal Typewriter (queued)
+  let _termTypingToken = 0;
+  let _termQueue = [];
+  let _termTyping = false;
+
+  function termReset(){
+    _termTypingToken++;
+    _termQueue = [];
+    _termTyping = false;
+    const termIn = document.getElementById("termIn");
+    const termRun = document.getElementById("termRun");
+    if(termIn) termIn.disabled = termLocked;
+    if(termRun) termRun.disabled = termLocked;
+  }
+
+  function termAppend(lines, opts={}){
+    const arr = Array.isArray(lines) ? lines : String(lines).split("\n");
+    _termQueue.push({arr, opts});
+    if(!_termTyping) termDrain();
+  }
+
+  function termDrain(){
+    if(_termTyping) return;
+    const termOut = document.getElementById("termOut");
+    const termIn = document.getElementById("termIn");
+    const termRun = document.getElementById("termRun");
+    if(!termOut) return;
+
+    const job = _termQueue.shift();
+    if(!job){
+      if(termIn) termIn.disabled = termLocked;
+      if(termRun) termRun.disabled = termLocked;
+      try{ termOut.scrollTop = termOut.scrollHeight; }catch(e){}
+      // keep focus in the input so Enter can be pressed repeatedly
+      try{
+        const ov = document.getElementById("overlay");
+        if(termIn && (!ov || ov.classList.contains("show"))) termIn.focus();
+      }catch(e){}
+      return;
+    }
+
+    const myToken = _termTypingToken;
+    const speed = Number.isFinite(job.opts.speed) ? job.opts.speed : 10; // ms per char
+    const lineDelay = Number.isFinite(job.opts.lineDelay) ? job.opts.lineDelay : 40;
+
+    _termTyping = true;
+    if(termIn) termIn.disabled = true;
+    if(termRun) termRun.disabled = true;
+
+    let li = 0;
+
+    const appendNextLine = () => {
+      if(myToken !== _termTypingToken) return;
+      if(li >= job.arr.length){
+        _termTyping = false;
+        setTimeout(termDrain, 0);
+        return;
+      }
+
+      const text = (job.arr[li] ?? "").toString();
+      const div = document.createElement("div");
+      div.className = "termline";
+      div.textContent = "";
+      termOut.appendChild(div);
+
+      let i = 0;
+      const step = () => {
+        if(myToken !== _termTypingToken) return;
+        if(i >= text.length){
+          li++;
+          try{ termOut.scrollTop = termOut.scrollHeight; }catch(e){}
+          setTimeout(appendNextLine, lineDelay);
+          return;
+        }
+        div.textContent += text.slice(i, i+1);
+        i++;
+        try{ termOut.scrollTop = termOut.scrollHeight; }catch(e){}
+        setTimeout(step, speed);
+      };
+      step();
+    };
+
+    appendNextLine();
+  }
+
+  function termPrompt(p){
+    termAppend("");
+    termAppend(p);
+    const i = document.getElementById("termIn");
+    if(i) i.value = "";
+    setTimeout(()=>{ try{ document.getElementById("termIn").focus(); }catch(e){} }, 400);
+  }
+
+  function execCommit(){
+    state.timeMode = "ENDED";
+    state.status = "UNLOCKED";
+    state.ended = "COMMIT";
+    setClockDisplay(true);
+    termLocked = true;
+    try{
+      const ti = document.getElementById("termIn");
+      const tr = document.getElementById("termRun");
+      if(ti){ ti.value=""; ti.disabled=true; ti.placeholder="INPUT LOCKED"; }
+      if(tr){ tr.disabled=true; }
+    }catch(e){}
+    termAppend([
+      "commit: write canonical...",
+      "commit: write canonical... OK",
+      "commit: sealing...",
+      "commit: SEALING... OK",
+      "",
+      "loop_state: TERMINATED"
+    ]);
+    // keep console open so the operator can read the output
+    save(); render();
+  }
+
+  function execStabilize(){
+    state.stabilized = true;
+    state.perAlive = true;
+    state.operatorBound = true;
+    setClockDisplay(true);
+    termAppend([
+      "stabilize: init... OK",
+      "stabilize: 繧､繝九ャ繝医ｒ髢｢縺壹′縺?縺ｾ縺?",
+      "stabilize: apply... OK",
+      "",
+      "canonical: NOT FINALIZED",
+      "canonical: 縺ｪ縺ｫ縺九ｉ縺ｪ縺 ",
+      "",
+      "operator_state: OUTSIDE_CANON",
+      "operator_state: 縺ｿ縺､縺九ｉ縺ｪ縺 ",
+      "",
+      "loop_state: ACTIVE",
+      "loop_state: 縺ｪ縺ｫ縺九ｉ縺ｪ縺?",
+      "",
+      "done."
+    ]);
+    unlockDoc("old_letter");
+    addLine("UNLOCK", "DOC UNLOCKED: 古びた手紙");
+    closeConsole();
+    // revert immediately but keep stabilized flags and perAlive
+    revertLoop();
+  }
+
+  function execExRollback(){
+    state.timeMode = "ENDED";
+    state.status = "UNLOCKED";
+    state.perAlive = true;
+    state.operatorBound = false;
+    state.stabilized = false;
+    state.ended = "EX_ROLLBACK";
+    setClockDisplay(true);
+    addLine("ROLLBACK", `ROLLBACK: ACCEPTED (EX)
+INCIDENT: AVOIDED
+LOOP: RELEASED
+OPERATOR: RELEASED
+CLOCK: 24:00`);
+    termAppend([
+      "rollback: init... OK",
+      "commitpoint: read... OK",
+      "rollback: apply... OK",
+      "",
+      "canonical: RESTORED",
+      "loop_state: RELEASED",
+      "operator_state: NORMAL",
+      "",
+      "done."
+    ]);
+    closeConsole();
+    save(); render();
+  }
+
+  function runConsole(){
+    if(termLocked){ return; }
+    const raw = document.getElementById("termIn").value;
+    const cmd = normalizeCmd(raw);
+
+    // handle y/N prompt flow
+    if(termPending){
+      const yn = cmd.toUpperCase();
+      if(yn === "Y" || yn === "YES"){
+        const t = termPending.type;
+        termPending = null;
+        if(t === "commit") return execCommit();
+        if(t === "rollback_to_stabilize") return execStabilize();
+        if(t === "ex_rollback") return execExRollback();
+      }else{
+        // default N / cancel
+        termAppend("…aborted");
+        termPending = null;
+        document.getElementById("termIn").value = "";
+        document.getElementById("termIn").focus();
+      }
+      return;
+    }
+
+    // HELP
+    if(cmd === "HELP"){
+      termAppend([
+        "DAYLOCK CONSOLE / COMMAND LIST",
+        "--------------------------------",
+        "general:",
+        "  status            show system status",
+        "  time              show current time",
+        "  clear             clear output",
+        "  log                show recent log index",
+        "  help              show this list",
+        "  ... (more)",
+        "ops:",
+        "  precheck_01       run precheck #1",
+        "  precheck_02       run precheck #2",
+        "",
+        "  ... (more)",
+        "◆ critical:",
+        "  >> SIGN NATSUKI_KANA     authenticate operator",
+        "  >> ROLLBACK                      request rollback (unstable)",
+        "  >> COMMIT                         finalize canonical record",
+        "  >> STABILIZE                        emergency stabilization route",
+        "--------------------------------",
+        "note: availability depends on system state."
+      ]);
+      document.getElementById("termIn").value = "";
+      return;
+    }
+
+    // CLEAR (terminal only)
+    if(cmd === "CLEAR"){
+      document.getElementById("termOut").innerHTML = "";
+      document.getElementById("termIn").value = "";
+      return;
+    }
+
+    // STATUS/TIME (simple)
+    if(cmd === "STATUS"){
+      const loopCount = (typeof state.loopCount === "number" ? state.loopCount : state.loop);
+      const maskLabel = (ok, label) => ok ? label : "?????";
+      termAppend([
+        "status: OK",
+        `loop_count: ${loopCount}`,
+        `clock: ${pad2(state.hour)}:${pad2(state.minute)}`,
+        `stabilized: ${state.stabilized ? "YES" : "NO"}`,
+
+        `${maskLabel(!!state.cabinetKey, "CABINET KEY")}: ${state.cabinetKey ? "YES" : "NO"}`,
+        `${maskLabel(!!state.perAlive, "PERO ALIVE")}: ${state.perAlive ? "YES" : "NO"}`,
+        `${maskLabel(!!state.operatorBound, "OP BOUND")}: ${state.operatorBound ? "YES" : "NO"}`,
+
+        `${maskLabel(!!state.precheck1, "PRECHECK-01")}: ${state.precheck1 ? "YES" : "NO"}`,
+        `${maskLabel(!!state.precheck2, "PRECHECK-02")}: ${state.precheck2 ? "YES" : "NO"}`,
+        `${maskLabel(!!state.token, "SESSION TOKEN")}: ${state.token ? "YES" : "NO"}`,
+        `${maskLabel(!!state.auth, "AUTH (SIGN)")}: ${state.auth ? "YES" : "NO"}`
+      ]);
+      document.getElementById("termIn").value = "";
+      return;
+    }
+    if(cmd === "TIME"){
+      termAppend([`time: ${pad2(state.hour)}:${pad2(state.minute)}`]);
+      document.getElementById("termIn").value = "";
+      return;
+    }
+
+    // COMMIT (confirm)
+    if(cmd === "COMMIT"){
+      termAppend([
+        "FINALIZATION REQUEST / COMMIT",
+        "--------------------------------",
+        "warning:",
+        "  this operation will finalize the canonical record.",
+        "",
+        "impact:",
+        "  - target period will be fixed as history.",
+        "  - rollback will be unavailable after commit.",
+        "  - responsibility will be recorded.",
+        "",
+        "--------------------------------",
+        "要約（日本語）",
+        "・本操作は履歴を確定します（取り消し不可）。",
+        "・確定後、復帰（ROLLBACK）は利用できません。",
+        "・実行結果および責任は記録されます。",
+        "・実行の可否について、十分に検討した上で選択してください。",
+        "--------------------------------"
+      ]);
+      termPending = {type:"commit"};
+      termPrompt("Proceed with COMMIT? [y/N]:");
+      return;
+    }
+
+    // STABILIZE (direct)
+    if(cmd === "STABILIZE"){
+      // allow execution (you can later gate by SIGN etc if needed)
+      termPending = {type:"rollback_to_stabilize"};
+      termPrompt("Proceed with STABILIZE? [y/N]:");
+      return;
+    }
+
+    // ROLLBACK
+    if(cmd === "ROLLBACK"){
+      const loopCount = (typeof state.loopCount === "number" ? state.loopCount : state.loop);
+      if(loopCount === 1){
+        // EX route: ask once (keeps the vibe)
+        termAppend([
+          "rollback: request...",
+          "commitpoint: read... OK",
+          "trace: rbk://0x01 -> ok",
+          "trace: rbk://0x01 -> ok",
+          "",
+          "note: this route is available only on LOOP=1."
+        ]);
+        termPending = {type:"ex_rollback"};
+        termPrompt("Proceed with ROLLBACK? [y/N]:");
+        return;
+      }
+
+      termAppend([
+        "commitpoint: read...",
+        "commitpoint: 縺ｿ縺､縺九ｉ縺ｪ縺 ",
+        "commitpoint: read... failed",
+        "",
+        "REF: N/A",
+        "REF: 縺ｪ縺ｫ縺九ｉ縺ｪ縺 ",
+        "REF: NULL",
+        "",
+        "ERR: rollback routine damaged",
+        "WARN: MEM_ASSIST DRIFT DETECTED",
+        "WARN: 繝ｭ繧ｰ縺ｮ謖?螳壹′谺｡縺代※縺?縺ｾ縺?",
+        "",
+        "trace: rbk://0x1? -> null",
+        "trace: rbk://0x?? -> n縺ｪll",
+        "trace: rbk://0x?? -> null",
+        "",
+        "…aborted",
+        ""
+      ]);
+      return;
+    }
+
+    // unknown
+    termAppend(`UNKNOWN: ${cmd}`);
+    document.getElementById("termIn").value = "";
+  }
+
+  // UI hooks
+  const state = load();
+  if(!state.flags) state.flags = {};
+  if(!state.keywords) state.keywords = {};
+  if(!state.docs) state.docs = {};
+  // ensure base profile + staged unlocks
+  syncProfileUnlocksFromKeywords();
+
+
+  // Migration / safety: always ensure location 1 is visible
+  if(!state.observedPhrases || typeof state.observedPhrases !== "object") state.observedPhrases = {};
+  if(!state.unlockedLocations || !Array.isArray(state.unlockedLocations)) state.unlockedLocations = [];
+  state.unlockedLocations = state.unlockedLocations.map(n => Number(n)).filter(n => Number.isFinite(n));
+  if(state.unlockedLocations.length === 0) state.unlockedLocations = [1];
+  if(!state.unlockedLocations.includes(1)) state.unlockedLocations.unshift(1);
+  // Ensure current location is valid
+  if(!state.unlockedLocations.includes(Number(state.location))) state.location = 1;
+  // Typewriter Logs: Scene Log (all commands) + Talk Log (only TALK events)
+
+function makeTalkLog(elId){
+  const el = document.getElementById(elId);
+  let queue = Promise.resolve();
+  let badAttempts = 0;
+  // Persist last speaker across pushTalk() calls so multiple TALK events from the
+  // same speaker collapse into one "novel-style" block.
+  let lastSpeakerGlobal = null;
+  let lastBubbleGlobal = null;
+  let lastEntryGlobal = null;
+
+  function scrollBottom(){
+    if(!el) return;
+    el.scrollTop = el.scrollHeight;
+  }
+  function trim(maxEntries=18){
+    if(!el) return;
+    const entries = el.querySelectorAll(".vnEntry");
+    const extra = entries.length - maxEntries;
+    for(let i=0;i<extra;i++) entries[i].remove();
+  }
+
+  function typeInto(target, text, speedMs=12, append=false){
+    if(!target) return Promise.resolve();
+
+    // Reuse existing span when appending (so consecutive lines from the same speaker feel like one speech)
+    let span = target.querySelector(":scope > span.vnText");
+    if(!span || !append){
+      target.innerHTML = "";
+      span = document.createElement("span");
+      span.className = "vnText";
+      target.appendChild(span);
+    }else{
+      // add a soft line break between sentences
+      if(span.textContent.length>0) span.textContent += "\n";
+    }
+
+    const cursor = document.createElement("span");
+    cursor.className = "cursor";
+    cursor.textContent = "▌";
+    target.appendChild(cursor);
+
+    const s = (text ?? "").toString();
+    let i = 0;
+    return new Promise((resolve)=>{
+      const step = ()=>{
+        if(i >= s.length){
+          cursor.remove();
+          scrollBottom();
+          resolve();
+          return;
+        }
+        span.textContent += s.charAt(i);
+        i += 1;
+        scrollBottom();
+        setTimeout(step, speedMs);
+      };
+      step();
+    });
+  }
+
+  function pushTalk(tLabel, rawText){
+    if(!el || !rawText) return;
+    const lines = rawText.toString().split("\n").map(s=>s.trim()).filter(Boolean);
+    if(lines.length===0) return;
+
+    queue = queue.then(async ()=>{
+      // Create an entry lazily only when we actually need a new block.
+      let entry = null;
+      const ensureEntry = ()=>{
+        if(entry) return entry;
+        entry = document.createElement("div");
+        entry.className = "vnEntry";
+        el.appendChild(entry);
+        lastEntryGlobal = entry;
+        trim();
+        scrollBottom();
+        return entry;
+      };
+
+      const speakerRe = /^(.{1,16}?)「([\s\S]+)」$/;
+
+      // Per-call flow (narration breaks grouping within the same push)
+      let lastSpeakerLocal = null;
+      let lastBubbleLocal = null;
+
+      for(const line of lines){
+        const m = line.match(speakerRe);
+        const narr = line.match(/^【([\s\S]+)】$/);
+
+        if(m){
+          const name = m[1].trim();
+          const body = m[2];
+
+          // NOTE: Do not collapse consecutive TALK events across calls.
+          // Each talk action should start a new block even if the speaker is the same.
+
+
+          // If the same speaker continues within this call, append into the same bubble
+          if(lastSpeakerLocal === name && lastBubbleLocal){
+            await typeInto(lastBubbleLocal, body, 10, true);
+            continue;
+          }
+
+          const block = document.createElement("div");
+          block.className = "vnBlock";
+
+          const nm = document.createElement("div");
+          nm.className = "vnName";
+          nm.textContent = name;
+
+          const bubble = document.createElement("div");
+          bubble.className = "vnBubble";
+
+          block.appendChild(nm);
+          block.appendChild(bubble);
+          ensureEntry().appendChild(block);
+
+          lastSpeakerLocal = name;
+          lastBubbleLocal = bubble;
+
+          // update global tail
+          lastSpeakerGlobal = name;
+          lastBubbleGlobal = bubble;
+
+          await typeInto(bubble, body, 10);
+        }else{
+          const box = document.createElement("div");
+          box.className = "vnNarration";
+          ensureEntry().appendChild(box);
+          await typeInto(box, narr ? narr[1] : line, 10);
+
+          // narration breaks the speaker flow
+          lastSpeakerLocal = null;
+          lastBubbleLocal = null;
+          lastSpeakerGlobal = null;
+          lastBubbleGlobal = null;
+        }
+      }
+
+      scrollBottom();
+    }).catch(()=>{});
+  }
+
+  function clear(){
+    if(!el) return;
+    el.innerHTML = "";
+    queue = Promise.resolve();
+    lastSpeakerGlobal = null;
+    lastBubbleGlobal = null;
+    lastEntryGlobal = null;
+  }
+
+  return { pushTalk, clear };
+}
+
+const talkLog = makeTalkLog("talkLog");
+
+
+document.getElementById("doCmd").onclick = () => {
+    const v = document.getElementById("cmd").value;
+    document.getElementById("cmd").value = "";
+    doCommand(v);
+    save(); render();
+};
+  document.getElementById("cmd").addEventListener("keydown", (e)=>{
+    if(e.key==="Enter"){ document.getElementById("doCmd").click(); }
+  });
+
+  document.getElementById("closeOverlay").onclick = closeConsole;
+  document.getElementById("termRun").onclick = runConsole;
+  document.getElementById("termIn").addEventListener("keydown", (e)=>{
+    if(e.key==="Enter"){
+      e.preventDefault();
+      e.stopPropagation();
+      runConsole();
+      // restore focus after exec (typewriter will re-focus when done)
+      try{ e.target.focus(); }catch(err){}
+    }
+  });
+document.getElementById("resetAll").onclick = ()=>{
+    if(!confirm("全データ（ローカル保存）を削除して初期化します。よろしいですか？")) return;
+    localStorage.removeItem(LS_KEY);
+    location.reload();
+  };
+
+  // init
+  onEnterLocation();
+  render();
+  save();
+})();
+
+
+  // Ensure People/Locations tabs are clickable (bind on load)
+  (function bindTabsOnce(){
+    const tabLocs = document.getElementById("tabLocs");
+    const tabPeople = document.getElementById("tabPeople");
+    if(tabLocs && !tabLocs.__bound){
+      tabLocs.__bound = true;
+      tabLocs.addEventListener("click", ()=> setTabImpl("locs"));
+    }
+    if(tabPeople && !tabPeople.__bound){
+      tabPeople.__bound = true;
+      tabPeople.addEventListener("click", ()=> setTabImpl("people"));
+    }
+  })();
+
+
+// expose for inline onclick (handled by wrapper)
+// (removed) window.setTab = setTab;
+  // GLOBAL_CLICK_LOGGER: diagnose tap/click on mobile
+  document.addEventListener("click", function(e){
+    try{
+      const t = e.target;
+      const id = t && t.id ? t.id : "";
+      if(id==="tabLocs" || id==="tabPeople"){
+        if(typeof addLine==="function"){ addLine("INFO", "CLICK: "+id); }
+      }
+    }catch(_){}
+  }, true);
+
+  // DEBUG: pointerdown logger (mobile friendly). Updates on-screen debug bar.
+
+  // Global tab switch (fix for "setTab is not defined")
+
+  // Fallback alias: some older handlers may call setTabImpl()
+  if(typeof window.setTab === "function" && typeof window.setTabImpl !== "function"){
+    window.setTabImpl = window.setTab;
+  }
+
+
+
+/* v348: ensure tab functions exist globally (prevents ReferenceError) */
+(function(){
+  function applyTab(tab){
+    try{
+      const tabLocs = document.getElementById("tabLocs");
+      const tabPeople = document.getElementById("tabPeople");
+      const paneLocs = document.getElementById("paneLocs");
+      const panePeople = document.getElementById("panePeople");
+      if(tabLocs) tabLocs.classList.toggle("active", tab === "locs");
+      if(tabPeople) tabPeople.classList.toggle("active", tab === "people");
+      if(paneLocs) paneLocs.style.display = (tab === "locs") ? "" : "none";
+      if(panePeople) panePeople.style.display = (tab === "people") ? "" : "none";
+    }catch(e){ /* no-op */ }
+  }
+  // expose globals used by inline onclick + listeners
+  window.setTabImpl = window.setTabImpl || function(tab){ applyTab(tab); };
+  window.setTab = window.setTab || function(tab){ window.setTabImpl(tab); };
+  // default tab initial paint (if panes exist)
+  applyTab("locs");
+})();
+
+</script>
+
+  <div id="blackout" aria-hidden="true">
+    <div class="bo-inner">
+      <div class="bo-title">BLACKOUT</div>
+      <div class="bo-sub">DAYLOCK / REVERT LOOP</div>
+            <pre class="bo-code" aria-hidden="true"></pre>
+    </div>
+  </div>
+
+
+  <div id="countdown" aria-hidden="true">
+    <div class="cd-inner">
+      <div class="cd-time">23:59</div>
+      <div class="cd-sub">TIME COLLAPSE → 07:00</div>
+      <div class="cd-num">REWIND</div>
+    </div>
+  </div>
+
+
+<div class="modal" id="docsModal" aria-hidden="true">
+  <div class="modalBackdrop" id="docsModalBg"></div>
+  <div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="dmTitle" style="width:min(980px, 96vw)">
+    <div class="modalTop">
+      <div>
+        <div class="modalTitle" id="dmTitle">DOCS</div>
+        <div class="modalSub muted" id="dmSub">Unlocked documents</div>
+      </div>
+      <button class="btn btnGhost" id="dmClose">Close</button>
+    </div>
+    <div class="modalBody" style="padding:0">
+      <div style="display:grid; grid-template-columns: 260px 1fr; gap:0; min-height: 420px;">
+        <div style="border-right:1px solid var(--line); background:rgba(10,15,22,.55); padding:10px; overflow:auto">
+          <div class="docList" id="docsModalList"></div>
+        </div>
+        <div style="padding:14px; overflow:auto">
+          <div class="docView mono" id="docsModalView" style="white-space:pre-wrap; line-height:1.6"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal" id="peopleModal" aria-hidden="true">
+  <div class="modalBackdrop" id="peopleModalBg"></div>
+  <div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="pmTitle">
+    <div class="modalTop">
+      <div>
+        <div class="modalTitle" id="pmTitle">PROFILE</div>
+        <div class="modalSub muted" id="pmSub">—</div>
+      </div>
+      <button class="btn btnGhost" id="pmClose">Close</button>
+    </div>
+    <div class="modalBody mono profileBody" id="pmBody"></div>
+  </div>
+</div>
+
+</body>
+</html>
