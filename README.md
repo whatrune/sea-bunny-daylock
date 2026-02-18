@@ -31,7 +31,7 @@
 　いつ・誰が・どんな操作や出来事をきっかけにループが始まり、何を満たせば止まるのかを、  
 　観測と検証で突き止めること。
 
-　URL：XXXX
+　URL：[詳細はこちら](https://whatrune.github.io/sea-bunny-daylock/)
 
 以上、よろしくお願いします。
 
@@ -48,7 +48,7 @@
 それで全てが手遅れになったら、笑えない。  
 まずはURLを開いて詳細を把握する必要がある。
 
-URL：XXXX
+URL：[詳細はこちら](https://whatrune.github.io/sea-bunny-daylock/)
 
 ---
 
