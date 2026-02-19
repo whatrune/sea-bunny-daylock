@@ -5,8 +5,8 @@
 
 （このメールは自動送信です）
 
-　From: whatrune@daylock.com  
-　To: natsuki_kana@seaandbunny.com  
+　From: whatrune @daylock.com  
+　To: natsuki_kana @seaandbunny.com  
 
 ### ■ 依頼内容
 　Sea&Bunny「DAYLOCK」に関連する異常挙動について、現場調査の依頼を発行します。  
@@ -31,7 +31,7 @@
 　いつ・誰が・どんな操作や出来事をきっかけにループが始まり、何を満たせば止まるのかを、  
 　観測と検証で突き止めること。
 
-　URL：[詳細はこちら](https://whatrune.github.io/sea-bunny-daylock/)
+　詳細は[こちら](https://whatrune.github.io/sea-bunny-daylock/)
 
 以上、よろしくお願いします。
 
@@ -48,7 +48,7 @@
 　それで全てが手遅れになったら、笑えない。  
 　まずはURLを開いて詳細を把握する必要がある。
 
-　URL：[詳細はこちら](https://whatrune.github.io/sea-bunny-daylock/)
+　URL：[Initiate DAYLOCK.](https://whatrune.github.io/sea-bunny-daylock/)
 
 ---
 
