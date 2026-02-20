@@ -734,6 +734,21 @@ main{min-height:90vh;}
   .main > section.card .content.sceneLayout{ overflow: visible !important; }
   .main > section.card .content.sceneLayout .sceneScroll{ overflow: visible; }
 }
+
+/* v384: keep Locations/People lists from stretching left column (slightly taller) */
+#paneLocs, #panePeople{
+  max-height: 260px;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+}
+#paneLocs::-webkit-scrollbar, #panePeople::-webkit-scrollbar{ width:10px; }
+#paneLocs::-webkit-scrollbar-thumb, #panePeople::-webkit-scrollbar-thumb{
+  background: rgba(159,176,192,.28); border-radius: 999px; border:2px solid transparent; background-clip: padding-box;
+}
+#paneLocs::-webkit-scrollbar-track, #panePeople::-webkit-scrollbar-track{ background: transparent; }
+
 </style>
 </head>
 <body>
@@ -3221,7 +3236,7 @@ const t = state.hour;
 
     // Strong flashback at 18:00 on loc 6
     if(t===18 && loc===6){
-      addLine("MEM", "MEMASSIST: FLASHBACK (HIGH)\nPHRASE: \"SIGN NATSUKI_KANA\"\nEMOTION: GUILT");
+      addLine("MEM", "MEMASSIST: FLASHBACK (HIGH)\nEMOTION: GUILT");
     }
   }
 
@@ -4110,6 +4125,7 @@ addLine("TIME", "ADVANCE -> "+nowTimeLabel());
       "",
       warning,
       "TYPE COMMAND",
+      "  >> SIGN NATSUKI_KANA     authenticate operator",
       ""
     ];
     termAppend(lines, {speed:18, lineDelay:30});
@@ -4358,7 +4374,6 @@ CLOCK: 24:00`);
         "",
         "  ... (more)",
         "◆ critical:",
-        "  >> SIGN NATSUKI_KANA     authenticate operator",
         "  >> ROLLBACK                      request rollback (unstable)",
         "  >> COMMIT                         finalize canonical record",
         "  >> STABILIZE                        emergency stabilization route",
