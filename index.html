@@ -2608,7 +2608,7 @@ rollback: APPLIED (one-time exception)
         out += "話すなら短く。見るなら素早く。\n";
         return out;
       }
-      if(t===20){
+      if(t===21){
         out += "『Sea&Beluga』の受付カウンター。\n";
         out += "厳金が受付の周りを行ったり来たりしている。\n";
         out += "カウンターの下を覗き込み、引き出しを開けては閉め、落ち着きがない。\n";
@@ -2707,7 +2707,7 @@ rollback: APPLIED (one-time exception)
         return out;
       }
 
-      if(t===20){
+      if(t===21){
         out += "1Fバックヤード。\n";
         out += "凪紗が作業台の上を片付けて、工具を静かにケースへ戻している。\n";
         out += "作業着の袖をまくり直して、ロッカーの方へ視線を投げた。\n";
@@ -2892,6 +2892,7 @@ if(t===21){
           out += "落ち着いた時間帯のはずなのに、客足は途切れない。\n";
           out += "陽夏は合間に伝票を揃えて、輪ゴムを指で弾き、また次の会計に戻る。\n";
           out += "流れを切らないための動きが、ずっと続いている。\n";
+          break;
         }
 
         if(t===15){
@@ -2929,6 +2930,7 @@ if(t===21){
           out += "『すみません、これ…！』――少し離れた場所から声が上がった。\n";
           out += "陽夏は『少々お待ちください』とだけ言って、レジから一歩、二歩と離れる。\n";
           out += "ほんの数秒。レジ前に、十分な“空白”が落ちた気がした。\n";
+          break;
         }
         if(t===20){
           out += "『Sea&Bunny』のレジ周り。\n";
@@ -2936,6 +2938,7 @@ if(t===21){
           out += "紙幣を一度広げて、指で揃え、数えては戻す。\n";
           out += "視線は落ち着いているのに、指先の動きだけが少し早い。\n";
           out += "「足りない」じゃなくて、「崩したくない」――そんな手つきだ。\n";
+          break;
         }
 
         if(t===21){
@@ -3046,7 +3049,7 @@ if(t===21){
     out += "夜の店に切り替わっていく気配がある。\n";
     break;
   }
-  if(t===20){
+  if(t===21){
     out += "厨房前。\n";
     out += "熱と音が少し落ちて、ようやく呼吸ができる。\n";
     out += "その分、疲れがどっと顔を出す。\n";
@@ -3134,7 +3137,7 @@ case 6:
           out += "小皿と酒の注文が増えて、往復が増える。\n";
           out += "七瀬がテラス側を回している。\n";
           out += "今は細かい忙しさが切れない。\n";
-        } else if(t===20){
+        } else if(t===22){
           out += "2Fテラス。\n";
           out += "熱が少し落ちて、呼吸がしやすくなる。\n";
           out += "それでも小皿の注文は、途切れない。\n";
@@ -3401,7 +3404,7 @@ const t = state.hour;
 厳金「片方だけって、もったいねーだろ(笑)」`);
           didTalk = true;
         }
-        if(t===20){
+        if(t===21){
           if(!state.profiles) state.profiles = {};
           const had = !!state.profiles.genkin;
           if(!state.profiles.genkin) state.profiles.genkin = 1;
@@ -3509,7 +3512,7 @@ const t = state.hour;
 厳金「俺は暇してるよ！なんかするか？なんかしようぜ！」`);
           didTalk = true;
         }
-        if(t===20){
+        if(t===21){
           if(!state.profiles) state.profiles = {};
           const had = !!state.profiles.nagisa;
           if(!state.profiles.nagisa) state.profiles.nagisa = 1;
@@ -3697,7 +3700,7 @@ if(t===14){
 茉陽「華那さん、通るだけでもええから、邪魔だけせんといてな」`);
           didTalk = true;
         }
-        if(t===20){
+        if(t===21){
           addLine("TALK", `陽夏「……ふぅ。やっと一段落っすね」
 陽夏「レジのほうは落ち着いてきたけど、つまみの注文が地味に続いてます」`);
           didTalk = true;
