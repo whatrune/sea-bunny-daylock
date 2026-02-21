@@ -749,6 +749,153 @@ main{min-height:90vh;}
 }
 #paneLocs::-webkit-scrollbar-track, #panePeople::-webkit-scrollbar-track{ background: transparent; }
 
+
+/* v389: mobile scroll usability + scrollbar hint */
+#paneLocs, #panePeople, #log, .talklog, .sceneScroll, .docView, .docsList{
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+@media (max-width: 900px){
+  #paneLocs, #panePeople, #log, .talklog, .sceneScroll, .docView, .docsList{
+    overflow-y: scroll !important;
+  }
+  /* visual hint even when OS hides scrollbars */
+  #paneLocs, #panePeople, #log, .talklog, .sceneScroll, .docView{
+    background-image:
+      linear-gradient(to bottom, rgba(103,232,249,.10), rgba(103,232,249,0) 18px),
+      linear-gradient(to top, rgba(103,232,249,.10), rgba(103,232,249,0) 18px);
+    background-repeat: no-repeat, no-repeat;
+    background-size: 100% 18px, 100% 18px;
+    background-position: top left, bottom left;
+  }
+}
+
+/* v390/v391: on mobile, scroll at panel level (Navigation / Scene / Log&State) */
+@media (max-width: 900px){
+  .main{height:auto !important; min-height:auto !important;}
+  .main > aside.card:first-of-type,
+  .main > section.card,
+  .main > aside.card:last-of-type{
+    max-height: 42vh;
+    height: auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    display: block !important;
+  }
+
+  /* scene panel must stop using inner flex-scroll on mobile, otherwise text overlaps Actions */
+  .main > section.card .content.sceneLayout{
+    display: block !important;
+    overflow: visible !important;
+    min-height: auto !important;
+  }
+
+  /* disable nested scrolls so each whole panel scrolls as one */
+  #paneLocs, #panePeople, #log, .talklog, .sceneScroll,
+  .main > section.card .content,
+  .main > aside.card:last-of-type .content{
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    min-height: auto !important;
+    background-image: none !important;
+  }
+}
+
+
+/* v392: mobile panel scrollbar style aligned to PC */
+@media (max-width: 900px){
+  .main > aside.card:first-of-type,
+  .main > section.card,
+  .main > aside.card:last-of-type{
+    scrollbar-width: thin;
+    scrollbar-color: rgba(103,232,249,.35) rgba(15,23,32,.55);
+  }
+  .main > aside.card:first-of-type::-webkit-scrollbar,
+  .main > section.card::-webkit-scrollbar,
+  .main > aside.card:last-of-type::-webkit-scrollbar{
+    width: 10px;
+    height: 10px;
+  }
+  .main > aside.card:first-of-type::-webkit-scrollbar-track,
+  .main > section.card::-webkit-scrollbar-track,
+  .main > aside.card:last-of-type::-webkit-scrollbar-track{
+    background: rgba(15,23,32,.55);
+    border-radius: 999px;
+  }
+  .main > aside.card:first-of-type::-webkit-scrollbar-thumb,
+  .main > section.card::-webkit-scrollbar-thumb,
+  .main > aside.card:last-of-type::-webkit-scrollbar-thumb{
+    background: rgba(103,232,249,.35);
+    border-radius: 999px;
+    border: 2px solid rgba(15,23,32,.55);
+  }
+  .main > aside.card:first-of-type::-webkit-scrollbar-thumb:hover,
+  .main > section.card::-webkit-scrollbar-thumb:hover,
+  .main > aside.card:last-of-type::-webkit-scrollbar-thumb:hover{
+    background: rgba(103,232,249,.5);
+  }
+}
+
+
+/* v393: docs modal mobile layout/readability fix */
+#docsModal .modalCard{ max-height: 90vh; }
+.docsModalGrid{
+  display:grid;
+  grid-template-columns: 260px 1fr;
+  gap:0;
+  min-height:420px;
+}
+.docsModalListPane{
+  border-right:1px solid var(--line);
+  background:rgba(10,15,22,.55);
+  padding:10px;
+  overflow:auto;
+}
+.docsModalViewPane{
+  padding:14px;
+  overflow:auto;
+  min-width:0;
+}
+#docsModalView{
+  font-size:14px;
+  line-height:1.7;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 900px){
+  #docsModal .modalCard{
+    width:min(96vw, 96vw) !important;
+    max-height: 92vh;
+    padding: 12px;
+  }
+  #docsModal .modalBody{ padding:0 !important; }
+  .docsModalGrid{
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(260px, 1fr);
+    min-height: 0;
+    max-height: 72vh;
+  }
+  .docsModalListPane{
+    border-right:0;
+    border-bottom:1px solid var(--line);
+    max-height: 180px;
+  }
+  .docsModalViewPane{
+    padding:12px;
+    min-height: 0;
+  }
+  #docsModalView{
+    font-size: 15px !important;
+    line-height: 1.8 !important;
+    white-space: pre-wrap !important;
+    writing-mode: horizontal-tb !important;
+    text-orientation: mixed !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -4804,11 +4951,11 @@ document.getElementById("resetAll").onclick = ()=>{
       <button class="btn btnGhost" id="dmClose">Close</button>
     </div>
     <div class="modalBody" style="padding:0">
-      <div style="display:grid; grid-template-columns: 260px 1fr; gap:0; min-height: 420px;">
-        <div style="border-right:1px solid var(--line); background:rgba(10,15,22,.55); padding:10px; overflow:auto">
+      <div class="docsModalGrid">
+        <div class="docsModalListPane">
           <div class="docList" id="docsModalList"></div>
         </div>
-        <div style="padding:14px; overflow:auto">
+        <div class="docsModalViewPane">
           <div class="docView mono" id="docsModalView" style="white-space:pre-wrap; line-height:1.6"></div>
         </div>
       </div>
