@@ -1029,6 +1029,7 @@ main{min-height:90vh;}
 
 (() => {
   const LS_KEY = "sea_bunny_daylock_demo_v0_34";
+  const TALKLOG_LS_KEY = LS_KEY + "__talklog";
 
   
   const PEOPLE = [
@@ -3613,6 +3614,10 @@ const t = state.hour;
       if(loc===2){
         // 1F階段
         if(t===9){
+          if(!state.profiles) state.profiles = {};
+          const had = !!state.profiles.usagi;
+          if(!state.profiles.usagi) state.profiles.usagi = 1;
+          if(!had) addLine("UNLOCK","PROFILE UNLOCKED: 野月 うさぎ");
           addLine("TALK", `野月「あぁ～。華那さんじゃないっすか。」
 野月「ちょっとそこまで行ってきますわぁ～。」`);
           didTalk = true;
@@ -4038,8 +4043,8 @@ if(t===14){
         return;
       }
 
-      // Only valid at Reception 22:00
-      if(loc===1 && t===22){
+      // Only valid at Reception 20:00
+      if(loc===1 && t===20){
         if(state.inventory && state.inventory.cabinetKey){
           addLine("GET", "キャビネットを開けた。DAYLOCK 取扱手順書を入手した。");
           unlockDoc("daylock_manual");
@@ -4731,7 +4736,23 @@ function makeTalkLog(elId){
     if(!el) return;
     el.scrollTop = el.scrollHeight;
   }
-  function trim(maxEntries=18){
+  function persistDom(){
+    try{
+      localStorage.setItem(TALKLOG_LS_KEY, el ? el.innerHTML : "");
+    }catch(e){}
+  }
+  function restoreDom(){
+    if(!el) return;
+    try{
+      const html = localStorage.getItem(TALKLOG_LS_KEY);
+      if(typeof html === "string" && html){
+        el.innerHTML = html;
+        scrollBottom();
+      }
+    }catch(e){}
+  }
+  restoreDom();
+  function trim(maxEntries=500){
     if(!el) return;
     const entries = el.querySelectorAll(".vnEntry");
     const extra = entries.length - maxEntries;
@@ -4857,6 +4878,7 @@ function makeTalkLog(elId){
       }
 
       scrollBottom();
+      persistDom();
     }).catch(()=>{});
   }
 
@@ -4867,6 +4889,7 @@ function makeTalkLog(elId){
     lastSpeakerGlobal = null;
     lastBubbleGlobal = null;
     lastEntryGlobal = null;
+    persistDom();
   }
 
   return { pushTalk, clear };
@@ -4899,6 +4922,7 @@ document.getElementById("doCmd").onclick = () => {
 document.getElementById("resetAll").onclick = ()=>{
     if(!confirm("全データ（ローカル保存）を削除して初期化します。よろしいですか？")) return;
     localStorage.removeItem(LS_KEY);
+    localStorage.removeItem(TALKLOG_LS_KEY);
     location.reload();
   };
 
